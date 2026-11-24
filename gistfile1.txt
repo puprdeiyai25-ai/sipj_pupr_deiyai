@@ -1,0 +1,3323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIPJ - Sistem Informasi Pelaporan Kondisi Kerusakan Jalan dan Jembatan | Dinas PUPR Kabupaten Deiyai</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Leaflet CSS & JS (Peta Satelit & Geospasial) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js (Grafik Status Penanganan) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- QRCode.js (Generator QR Code Asli) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            pupr: {
+              900: '#04392B',
+              800: '#064e3b',
+              700: '#065f46',
+              600: '#047857',
+              500: '#10b981',
+              gold: '#eab308',
+              navy: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #eef2f6;
+      color: #0f172a;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Leaflet Z-index & Map Styling */
+    .leaflet-container {
+      z-index: 10 !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 14px !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    /* Animasi Halus */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+
+    /* Print Styles Khusus Dokumen Resmi PUPR Kabupaten Deiyai */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #print-document-root, #print-document-root * {
+        visibility: visible !important;
+      }
+      #print-document-root {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 12mm !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-emerald-700 selection:text-white">
+
+  <!-- TOAST NOTIFICATION CONTAINER (Pengganti alert) -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none no-print"></div>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1: PORTAL MASYARAKAT (PUBLIK)                                    -->
+  <!-- ===================================================================== -->
+  <div id="public-portal" class="min-h-screen flex flex-col bg-slate-100">
+    
+    <!-- Header Instansi Resmi -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          
+          <!-- Logo & Identitas Instansi -->
+          <div class="flex items-center gap-3">
+            <!-- SVG Logo Kabupaten Deiyai & Kementerian PUPR -->
+            <div class="flex items-center gap-2 shrink-0">
+              <!-- Logo Kab. Deiyai -->
+              <svg class="w-11 h-11 drop-shadow-sm" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 4L54 12V31C54 45.5 44.5 56.5 32 60C19.5 56.5 10 45.5 10 31V12L32 4Z" fill="#065F46" stroke="#EAB308" stroke-width="3"/>
+                <path d="M16 38C22 32 28 32 32 36C36 32 42 32 48 38V43C42 49 36 53 32 55C28 53 22 49 16 43V38Z" fill="#0284C7"/>
+                <path d="M18 33L27 20L34 28L40 21L46 33H18Z" fill="#10B981"/>
+                <circle cx="32" cy="14" r="3.5" fill="#FACC15"/>
+              </svg>
+              <!-- Logo PUPR -->
+              <svg class="w-11 h-11 drop-shadow-sm" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="56" height="56" rx="12" fill="#1E3A8A" stroke="#EAB308" stroke-width="2.5"/>
+                <path d="M16 46L26 18H33L23 46H16Z" fill="#FACC15"/>
+                <path d="M31 46L41 18H48L38 46H31Z" fill="#FACC15"/>
+                <rect x="14" y="30" width="36" height="5" rx="1.5" fill="#FFFFFF"/>
+              </svg>
+            </div>
+
+            <div class="border-r border-slate-200 pr-3 hidden sm:block">
+              <p class="text-xs font-extrabold text-slate-900 tracking-tight leading-tight">DINAS PEKERJAAN UMUM DAN PENATAAN RUANG</p>
+              <p class="text-xs font-black text-emerald-800">KABUPATEN DEIYAI</p>
+              <p class="text-[10px] text-slate-500">Jl. Trans Nabire - Deiyai, Kabupaten Deiyai, Provinsi Papua Tengah</p>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl sm:text-3xl font-black text-[#065f46] tracking-tight">SIPJ</span>
+              <div>
+                <h1 class="text-xs sm:text-sm font-bold text-slate-800 leading-tight">
+                  Sistem Informasi Pelaporan Kondisi Kerusakan Jalan dan Jembatan
+                </h1>
+                <p class="text-[11px] text-emerald-700 font-medium">
+                  Bidang Bina Marga - Seksi Preservasi Jalan dan Jembatan
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigasi Mode Publik & Tombol Masuk Dashboard -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="switchPublicTab('form')" id="btn-pub-form"
+              class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-[#065f46] text-white shadow-sm">
+              <i class="fa-solid fa-file-pen"></i>
+              <span>Laporan Masyarakat</span>
+            </button>
+            <button onclick="switchPublicTab('track')" id="btn-pub-track"
+              class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">
+              <i class="fa-solid fa-magnifying-glass-location text-emerald-700"></i>
+              <span>Lacak Tiket</span>
+            </button>
+            <button onclick="openLoginModal()"
+              class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 shadow-sm">
+              <i class="fa-solid fa-gauge-high"></i>
+              <span>Login</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Banner Ringkas Status Infrastruktur Publik -->
+    <div class="bg-gradient-to-r from-[#064e3b] via-[#065f46] to-[#047857] text-white py-3.5 px-4 shadow-inner">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-900 text-[10px] font-extrabold uppercase tracking-wider">Layanan Publik Terpadu</span>
+          <h2 class="text-sm sm:text-base font-bold mt-1">Partisipasi Masyarakat untuk Infrastruktur Jalan & Jembatan Kabupaten Deiyai</h2>
+        </div>
+        <div class="flex items-center gap-4 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/15 text-xs">
+          <div>
+            <span class="text-emerald-200 block text-[10px]">Total Laporan</span>
+            <span id="pub-stat-total" class="text-base font-extrabold text-white">124</span>
+          </div>
+          <div class="h-6 w-px bg-white/20"></div>
+          <div>
+            <span class="text-emerald-200 block text-[10px]">Dalam Penanganan</span>
+            <span id="pub-stat-progress" class="text-base font-extrabold text-amber-300">18</span>
+          </div>
+          <div class="h-6 w-px bg-white/20"></div>
+          <div>
+            <span class="text-emerald-200 block text-[10px]">Selesai</span>
+            <span id="pub-stat-done" class="text-base font-extrabold text-emerald-300">28</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Konten Utama Portal Masyarakat -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+      
+      <!-- TAB 1: FORMULIR PELAPORAN CEPAT -->
+      <div id="pub-tab-form" class="animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/70">
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900">Formulir Pelaporan Cepat</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Isi informasi lokasi, foto kerusakan, dan titik koordinat. Nomor tiket & QR Code diberikan otomatis setelah laporan disimpan.</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl self-start">
+              <i class="fa-solid fa-satellite"></i> Terintegrasi Peta Satelit PUPR Deiyai
+            </span>
+          </div>
+
+          <form id="public-report-form" onsubmit="handlePublicSubmit(event)" class="p-5 sm:p-6 space-y-5">
+            <!-- Baris 1: Nama Pelapor & Nomor HP -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama pelapor <span class="text-red-600">*</span></label>
+                <input type="text" id="pub-nama" required placeholder="Masukkan nama lengkap Anda"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nomor HP aktif (WhatsApp) <span class="text-red-600">*</span></label>
+                <input type="tel" id="pub-hp" required placeholder="Contoh: 081248xxxxxx"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition" />
+              </div>
+            </div>
+
+            <!-- Baris 2: Distrik & Kampung -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Distrik <span class="text-red-600">*</span></label>
+                <select id="pub-distrik" required onchange="populateKampungOptions('pub-distrik', 'pub-kampung-list')"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition">
+                  <option value="">-- Pilih Distrik di Kabupaten Deiyai --</option>
+                  <option value="Tigi">Tigi</option>
+                  <option value="Tigi Timur">Tigi Timur</option>
+                  <option value="Tigi Barat">Tigi Barat</option>
+                  <option value="Bowobado">Bowobado</option>
+                  <option value="Kapiraya">Kapiraya</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kampung <span class="text-red-600">*</span></label>
+                <input type="text" id="pub-kampung" required list="pub-kampung-list" placeholder="Pilih atau ketik kampung (Contoh: Wako, Idake, Mugi)"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition" />
+                <datalist id="pub-kampung-list">
+                  <option value="Wako"></option>
+                  <option value="Idake"></option>
+                  <option value="Mugi"></option>
+                  <option value="Wania"></option>
+                  <option value="Kogima"></option>
+                  <option value="Amago"></option>
+                  <option value="Bomou"></option>
+                  <option value="Kopai"></option>
+                  <option value="Damabagata"></option>
+                  <option value="Diyai"></option>
+                  <option value="Ugiya"></option>
+                </datalist>
+              </div>
+            </div>
+
+            <!-- Baris 3: Kategori Objek & Nama Ruas Jalan / Jembatan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori objek <span class="text-red-600">*</span></label>
+                <select id="pub-kategori" required
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition">
+                  <option value="">Pilih kategori</option>
+                  <option value="Jalan">Jalan</option>
+                  <option value="Jembatan">Jembatan</option>
+                  <option value="Gorong-gorong / Drainase">Gorong-gorong / Drainase</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama ruas jalan / jembatan <span class="text-red-600">*</span></label>
+                <input type="text" id="pub-ruas" required placeholder="Contoh: Jalan Trans Nabire - Deiyai / Jembatan Wako"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition" />
+              </div>
+            </div>
+
+            <!-- Baris 4: Jenis Kerusakan & Tingkat Kerusakan Awal -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Jenis kerusakan <span class="text-red-600">*</span></label>
+                <select id="pub-jenis" required
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition">
+                  <option value="">Pilih jenis kerusakan</option>
+                  <option value="Lubang">Lubang (Potholes)</option>
+                  <option value="Retak">Retak Permukaan / Struktural</option>
+                  <option value="Amblas">Amblas / Penurunan Badan Jalan</option>
+                  <option value="Longsor">Longsor / Tertimbun Material</option>
+                  <option value="Bahu Rusak">Bahu Jalan / Talud Rusak</option>
+                  <option value="Jembatan Rusak">Jembatan Rusak / Lantai Lapuk</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Tingkat kerusakan awal <span class="text-red-600">*</span></label>
+                <select id="pub-tingkat" required
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition">
+                  <option value="">Pilih tingkat kerusakan</option>
+                  <option value="Rusak Ringan">Rusak Ringan</option>
+                  <option value="Rusak Sedang">Rusak Sedang</option>
+                  <option value="Rusak Berat">Rusak Berat</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Baris 5: Patokan Lokasi & Dampak -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Patokan lokasi</label>
+                <input type="text" id="pub-patokan" placeholder="Dekat sekolah / jembatan / gereja / bangunan"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Dampak lalu lintas</label>
+                <select id="pub-dampak"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition">
+                  <option value="Tidak mengganggu">Tidak mengganggu</option>
+                  <option value="Mengganggu sebagian">Mengganggu sebagian</option>
+                  <option value="Memutus akses">Memutus akses total</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Baris 6: Latitude & Longitude + Tombol GPS -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Latitude</label>
+                  <input type="text" id="pub-lat" placeholder="-4.054321"
+                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 bg-white font-mono outline-none focus:border-emerald-600" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Longitude</label>
+                  <input type="text" id="pub-lng" placeholder="136.284512"
+                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 bg-white font-mono outline-none focus:border-emerald-600" />
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <button type="button" onclick="getDeviceGPS('pub-lat', 'pub-lng', 'gps-status-pub')"
+                  class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border border-emerald-300 transition">
+                  <i class="fa-solid fa-location-crosshairs"></i>
+                  <span>Ambil koordinat GPS perangkat</span>
+                </button>
+                <span id="gps-status-pub" class="text-xs text-slate-500">Klik tombol di samping untuk mengambil titik lokasi otomatis di Kabupaten Deiyai</span>
+              </div>
+            </div>
+
+            <!-- Baris 7: Unggah Foto Kerusakan (Drag & Drop + Live Preview) & Usulan Penanganan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Foto dokumentasi kerusakan (JPG/PNG/WEBP, maks. 3 MB)</label>
+                <div id="pub-dropzone" onclick="document.getElementById('pub-foto').click()"
+                  class="cursor-pointer border-2 border-dashed border-slate-300 hover:border-emerald-600 bg-slate-50/70 hover:bg-emerald-50/40 rounded-xl p-4 text-center transition">
+                  <input type="file" id="pub-foto" accept="image/jpeg,image/png,image/webp" class="hidden"
+                    onchange="handlePhotoUpload(this, 'pub-foto-preview', 'pub-foto-wrapper', 'pub')" />
+                  <i class="fa-solid fa-camera text-2xl text-emerald-700 mb-1"></i>
+                  <p class="text-xs font-semibold text-slate-700">Klik atau seret foto kerusakan ke sini</p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">Mendukung JPG, PNG, WEBP (Maksimal 3 MB)</p>
+                </div>
+                <div id="pub-foto-wrapper" class="hidden mt-3 relative inline-block">
+                  <img id="pub-foto-preview" src="" alt="Pratinjau Foto Kerusakan" class="h-32 w-52 object-cover rounded-xl border border-slate-300 shadow-sm" />
+                  <button type="button" onclick="clearPhotoUpload('pub-foto', 'pub-foto-wrapper', 'pub')"
+                    class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white text-xs flex items-center justify-center shadow hover:bg-red-700">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Usulan penanganan</label>
+                  <input type="text" id="pub-usulan" placeholder="Contoh: penambalan / perbaikan struktur jembatan"
+                    class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Keterangan tambahan</label>
+                  <textarea id="pub-keterangan" rows="3" placeholder="Jelaskan kondisi lapangan secara detail..."
+                    class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none transition"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100">
+              <p class="text-xs text-slate-500">
+                <i class="fa-solid fa-circle-info text-emerald-700 mr-1"></i>
+                Informasi masyarakat merupakan laporan awal dan wajib diverifikasi secara teknis sebelum menjadi dasar pelaksanaan pekerjaan.
+              </p>
+              <button type="submit"
+                class="px-6 py-3 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 shrink-0">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Kirim Laporan</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB BARCODE / QR CODE SCANNER (BARU) -->
+      <div id="pub-tab-scan" class="hidden animate-fade-in space-y-5">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 max-w-2xl mx-auto">
+          <div class="text-center space-y-2">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto text-2xl border border-emerald-200">
+              <i class="fa-solid fa-qrcode"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900">Scan Barcode / QR Code Tiket & Laporan</h3>
+            <p class="text-xs text-slate-500">Gunakan kamera perangkat untuk memindai QR code tiket pengaduan atau unggah gambar barcode untuk langsung melacak status penanganan di Dinas PUPR Kabupaten Deiyai.</p>
+          </div>
+
+          <div class="mt-6 space-y-4">
+            <!-- Pilihan 1: Buka Kamera Scanner -->
+            <div class="p-5 rounded-2xl border-2 border-dashed border-emerald-400 bg-emerald-50/40 text-center space-y-3">
+              <div id="qr-reader-container" class="hidden relative max-w-sm mx-auto overflow-hidden rounded-xl border border-slate-300 bg-black">
+                <video id="qr-video-preview" class="w-full h-48 object-cover"></video>
+                <div class="absolute inset-0 border-2 border-emerald-400/80 pointer-events-none flex items-center justify-center">
+                  <div class="w-32 h-32 border-2 border-dashed border-white/80 rounded-lg"></div>
+                </div>
+              </div>
+              <div id="qr-scanner-actions">
+                <button type="button" onclick="startDeviceQRScanner()"
+                  class="px-5 py-3 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-extrabold shadow inline-flex items-center gap-2">
+                  <i class="fa-solid fa-camera"></i>
+                  <span>Aktifkan Kamera untuk Scan QR</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-500">Arahkan kamera ke QR Code tiket laporan (misal: LP-2026-00124)</p>
+            </div>
+
+            <!-- Pilihan 2: Unggah Gambar QR Code / Barcode -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center space-y-2">
+              <label class="block text-xs font-bold text-slate-700">Atau Unggah Gambar File QR Code / Barcode</label>
+              <input type="file" id="qr-file-input" accept="image/*" onchange="handleQRImageUpload(this)"
+                class="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 cursor-pointer mx-auto block" />
+              <p class="text-[10px] text-slate-400">Sistem akan membaca dan mengarahkan Anda ke detail tiket laporan.</p>
+            </div>
+
+            <!-- Demo Contoh QR Code Cepat -->
+            <div class="pt-2 text-center">
+              <p class="text-xs font-bold text-slate-700 mb-2">Atau uji pindai cepat tiket berikut:</p>
+              <div class="flex flex-wrap justify-center gap-2">
+                <button onclick="simulateScanResult('LP-2026-00124')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-mono text-xs font-bold border border-slate-200">Simulasi Scan LP-2026-00124</button>
+                <button onclick="simulateScanResult('LP-2026-00123')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-mono text-xs font-bold border border-slate-200">Simulasi Scan LP-2026-00123</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: LACAK TIKET LAPORAN -->
+      <div id="pub-tab-track" class="hidden animate-fade-in space-y-5">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+          <div class="max-w-2xl">
+            <h3 class="text-lg font-extrabold text-slate-900">Lacak Status & Progres Tiket Laporan</h3>
+            <p class="text-xs text-slate-500 mt-1">Masukkan Nomor Tiket pengaduan Anda (contoh: <span class="font-mono font-bold text-emerald-700">LP-2026-00124</span>) untuk melihat status verifikasi dan penanganan oleh Dinas PUPR Kabupaten Deiyai.</p>
+          </div>
+          <div class="mt-4 flex flex-col sm:flex-row gap-3 max-w-2xl">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-ticket absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="track-input" value="LP-2026-00124" placeholder="Masukkan Nomor Tiket (misal: LP-2026-00124)"
+                class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-emerald-600 outline-none font-medium" />
+            </div>
+            <button onclick="searchTicket()"
+              class="px-5 py-2.5 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-sm font-bold shadow-sm transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>Cek Status</span>
+            </button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span>Contoh tiket cepat:</span>
+            <button type="button" onclick="quickTrack('LP-2026-00124')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 font-mono font-semibold">LP-2026-00124</button>
+            <button type="button" onclick="quickTrack('LP-2026-00123')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 font-mono font-semibold">LP-2026-00123</button>
+            <button type="button" onclick="quickTrack('LP-2026-00121')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 font-mono font-semibold">LP-2026-00121</button>
+          </div>
+        </div>
+        <div id="track-result-container"></div>
+      </div>
+
+    </main>
+
+    <!-- Footer Publik -->
+    <footer class="bg-[#064e3b] text-white py-3.5 px-4 mt-auto border-t border-emerald-800">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-emerald-100">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-road text-amber-400"></i>
+          <span>SIPJ Dinas PUPR Kabupaten Deiyai • Bidang Bina Marga - Seksi Preservasi Jalan dan Jembatan</span>
+        </div>
+        <span>Jl. Trans Nabire - Deiyai, Kabupaten Deiyai, Papua Tengah</span>
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2: DASHBOARD INTERNAL DINAS PUPR KABUPATEN DEIYAI                -->
+  <!-- ===================================================================== -->
+  <div id="internal-dashboard" class="hidden min-h-screen flex flex-col bg-[#eef2f6]">
+    
+    <!-- Top Header Instansi -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+      <div class="px-3 sm:px-5 py-2 flex items-center justify-between gap-3">
+        <!-- Kiri: Hamburger + Logo Instansi + Judul SIPJ -->
+        <div class="flex items-center gap-3">
+          <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+
+          <!-- Logo Kabupaten Deiyai & PUPR -->
+          <div class="flex items-center gap-2 shrink-0">
+            <svg class="w-10 h-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M32 4L54 12V31C54 45.5 44.5 56.5 32 60C19.5 56.5 10 45.5 10 31V12L32 4Z" fill="#065F46" stroke="#EAB308" stroke-width="3"/>
+              <path d="M16 38C22 32 28 32 32 36C36 32 42 32 48 38V43C42 49 36 53 32 55C28 53 22 49 16 43V38Z" fill="#0284C7"/>
+              <path d="M18 33L27 20L34 28L40 21L46 33H18Z" fill="#10B981"/>
+              <circle cx="32" cy="14" r="3.5" fill="#FACC15"/>
+            </svg>
+            <svg class="w-10 h-10 hidden sm:block" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="4" width="56" height="56" rx="12" fill="#1E3A8A" stroke="#EAB308" stroke-width="2.5"/>
+              <path d="M16 46L26 18H33L23 46H16Z" fill="#FACC15"/>
+              <path d="M31 46L41 18H48L38 46H31Z" fill="#FACC15"/>
+              <rect x="14" y="30" width="36" height="5" rx="1.5" fill="#FFFFFF"/>
+            </svg>
+          </div>
+
+          <div class="hidden xl:block border-r border-slate-200 pr-4">
+            <p class="text-[11px] font-extrabold text-slate-900 leading-tight">DINAS PEKERJAAN UMUM DAN PENATAAN RUANG</p>
+            <p class="text-xs font-black text-emerald-800 leading-tight">KABUPATEN DEIYAI</p>
+            <p class="text-[10px] text-slate-500">Jl. Trans Nabire - Deiyai, Kabupaten Deiyai, Provinsi Papua Tengah</p>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl sm:text-3xl font-black tracking-tight text-[#065f46]">SIPJ</span>
+            <div class="hidden md:block">
+              <p class="text-xs font-bold text-slate-800 leading-tight">Sistem Informasi Pelaporan Kondisi Kerusakan Jalan dan Jembatan</p>
+              <p class="text-[11px] text-slate-500">Bidang Bina Marga - Seksi Preservasi Jalan dan Jembatan</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kanan: Switcher Peran Pengguna (Admin / Operator / Kepala Bidang) & Logout -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Quick Role Switcher Dropdown -->
+          <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-xl">
+            <div class="w-7 h-7 rounded-full bg-[#065f46] text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="text-left">
+              <p class="text-[10px] text-slate-500 leading-none">Peran Aktif:</p>
+              <select id="header-role-switcher" onchange="switchUserRole(this.value)"
+                class="text-xs font-extrabold text-emerald-900 bg-transparent outline-none cursor-pointer pr-1">
+                <option value="Admin">Admin (Administrator)</option>
+                <option value="Operator">Operator (Survei Lapangan)</option>
+                <option value="Kepala Bidang">Kepala Bidang (Bina Marga)</option>
+              </select>
+            </div>
+          </div>
+
+          <button onclick="switchToPublicPortal()" title="Kembali ke Portal Masyarakat"
+            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            <i class="fa-solid fa-globe text-emerald-700"></i>
+            <span>Portal Publik</span>
+          </button>
+
+          <button onclick="logoutInternal()"
+            class="px-3.5 py-2 rounded-xl bg-[#065f46] hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span class="hidden sm:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container: Sidebar + Workspace -->
+    <div class="flex-1 flex relative">
+      
+      <!-- Sidebar Navigasi Hijau PUPR -->
+      <aside id="internal-sidebar"
+        class="fixed lg:static inset-y-0 left-0 z-30 w-56 bg-gradient-to-b from-[#064e3b] via-[#065f46] to-[#04392B] text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col justify-between shrink-0 shadow-xl lg:shadow-none no-print">
+        <div class="p-3 space-y-1 overflow-y-auto">
+          <div class="px-3 py-2 mb-2 border-b border-white/15 flex items-center justify-between lg:hidden">
+            <span class="font-bold text-xs uppercase tracking-wider">Menu SIPJ Deiyai</span>
+            <button onclick="toggleMobileSidebar()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <button onclick="switchAdminSection('dashboard')" data-nav="dashboard"
+            class="admin-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-white/15 text-white shadow-sm transition">
+            <i class="fa-solid fa-house w-4 text-center text-amber-300"></i>
+            <span>Dashboard</span>
+          </button>
+
+          <button onclick="switchAdminSection('input')" data-nav="input" id="nav-btn-input"
+            class="admin-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <i class="fa-solid fa-square-plus w-4 text-center"></i>
+            <span>Input Laporan</span>
+          </button>
+
+          <button onclick="switchAdminSection('data')" data-nav="data"
+            class="admin-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <span class="flex items-center gap-2.5">
+              <i class="fa-solid fa-table-list w-4 text-center"></i>
+              <span>Data Laporan</span>
+            </span>
+            <span id="sidebar-badge-total" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-950 text-emerald-200">124</span>
+          </button>
+
+          <button onclick="switchAdminSection('peta')" data-nav="peta"
+            class="admin-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <i class="fa-solid fa-satellite w-4 text-center text-amber-300"></i>
+            <span>Peta Lokasi (Satelit)</span>
+          </button>
+
+          <button onclick="switchAdminSection('verifikasi')" data-nav="verifikasi" id="nav-btn-verifikasi"
+            class="admin-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <span class="flex items-center gap-2.5">
+              <i class="fa-solid fa-circle-check w-4 text-center"></i>
+              <span>Verifikasi</span>
+            </span>
+            <span id="sidebar-badge-verif" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-600 text-white">10</span>
+          </button>
+
+          <button onclick="switchAdminSection('rekapitulasi')" data-nav="rekapitulasi"
+            class="admin-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <i class="fa-solid fa-chart-column w-4 text-center"></i>
+            <span>Rekapitulasi Wilayah</span>
+          </button>
+
+          <button onclick="switchAdminSection('pengguna')" data-nav="pengguna"
+            class="admin-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <i class="fa-solid fa-users-gear w-4 text-center"></i>
+            <span>Pengguna & Peran</span>
+          </button>
+
+          <button onclick="openOfficialPrintModal(selectedReportId)"
+            class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <i class="fa-solid fa-file-pdf w-4 text-center text-rose-300"></i>
+            <span>Laporan (PDF)</span>
+          </button>
+
+          <button onclick="switchAdminSection('pengaturan')" data-nav="pengaturan" id="nav-btn-pengaturan"
+            class="admin-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition">
+            <i class="fa-solid fa-gear w-4 text-center"></i>
+            <span>Pengaturan & Backup</span>
+          </button>
+        </div>
+
+        <div class="p-3 border-t border-white/10 space-y-2">
+          <button onclick="switchToPublicPortal()"
+            class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-extrabold bg-amber-400 hover:bg-amber-300 text-slate-900 shadow transition">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>Portal Masyarakat</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Workspace Utama -->
+      <main class="flex-1 p-3.5 sm:p-5 overflow-x-hidden space-y-4">
+        
+        <!-- Sub-Header Halaman & Banner Hak Akses Peran -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5 no-print">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="admin-page-title" class="text-lg sm:text-xl font-extrabold text-slate-900">Dashboard Utama</h2>
+              <span id="role-permission-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Hak Akses: Full Control (Admin)
+              </span>
+            </div>
+            <p id="admin-page-subtitle" class="text-xs text-slate-500">Ringkasan data laporan kerusakan jalan dan jembatan Kabupaten Deiyai</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 flex items-center gap-2 shadow-sm">
+              <i class="fa-regular fa-calendar text-emerald-700"></i>
+              <span id="current-date-display">Selasa, 24 November 2026</span>
+            </div>
+            <button onclick="refreshDashboardData()"
+              class="px-3.5 py-2 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+              <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+              <span>Refresh Data</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION A: DASHBOARD UTAMA (MULTI-PANEL GRID LENGKAP)           -->
+        <!-- =============================================================== -->
+        <div id="section-dashboard" class="space-y-4 animate-fade-in">
+          
+          <!-- 1. BARIS KPI ATAS (7 KARTU STATUS) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-2.5">
+            <!-- Total Laporan -->
+            <div onclick="filterDataByStatus('ALL')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-[#065f46] to-[#047857] text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-road text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-emerald-100">Total Laporan</p>
+                <p id="kpi-total" class="text-xl font-black leading-tight">124</p>
+                <p class="text-[10px] text-emerald-200">+12 bulan ini</p>
+              </div>
+            </div>
+
+            <!-- Rusak Berat -->
+            <div onclick="filterDataBySeverity('Rusak Berat')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-red-600 to-rose-700 text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-triangle-exclamation text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-red-100">Rusak Berat</p>
+                <p id="kpi-berat" class="text-xl font-black leading-tight">32</p>
+                <p id="kpi-berat-pct" class="text-[10px] text-red-100">25.8%</p>
+              </div>
+            </div>
+
+            <!-- Rusak Sedang -->
+            <div onclick="filterDataBySeverity('Rusak Sedang')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-circle-exclamation text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-amber-50">Rusak Sedang</p>
+                <p id="kpi-sedang" class="text-xl font-black leading-tight">48</p>
+                <p id="kpi-sedang-pct" class="text-[10px] text-amber-50">38.7%</p>
+              </div>
+            </div>
+
+            <!-- Rusak Ringan -->
+            <div onclick="filterDataBySeverity('Rusak Ringan')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-circle-info text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-sky-100">Rusak Ringan</p>
+                <p id="kpi-ringan" class="text-xl font-black leading-tight">28</p>
+                <p id="kpi-ringan-pct" class="text-[10px] text-sky-100">22.6%</p>
+              </div>
+            </div>
+
+            <!-- Menunggu Verifikasi -->
+            <div onclick="filterDataByStatus('Menunggu Verifikasi')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-purple-600 to-violet-700 text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <i class="fa-regular fa-clock text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-purple-100 leading-tight">Menunggu Verifikasi</p>
+                <p id="kpi-verif" class="text-xl font-black leading-tight">10</p>
+                <p id="kpi-verif-pct" class="text-[10px] text-purple-200">8.1%</p>
+              </div>
+            </div>
+
+            <!-- Dalam Penanganan -->
+            <div onclick="filterDataByStatus('Dalam Penanganan')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-cyan-600 to-teal-700 text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-helmet-safety text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-cyan-100 leading-tight">Dalam Penanganan</p>
+                <p id="kpi-progress" class="text-xl font-black leading-tight">18</p>
+                <p id="kpi-progress-pct" class="text-[10px] text-cyan-100">14.5%</p>
+              </div>
+            </div>
+
+            <!-- Selesai -->
+            <div onclick="filterDataByStatus('Selesai')" class="cursor-pointer rounded-2xl bg-gradient-to-br from-emerald-600 to-green-700 text-white p-3 shadow-sm hover:shadow-md transition flex items-center gap-2.5 col-span-2 sm:col-span-1">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-circle-check text-base"></i>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-emerald-100">Selesai</p>
+                <p id="kpi-done" class="text-xl font-black leading-tight">28</p>
+                <p id="kpi-done-pct" class="text-[10px] text-emerald-100">22.6%</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. BARIS TENGAH: GRAFIK DONUT | PETA SATELIT INTERAKTIF | REKAPITULASI PER DISTRIK -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Grafik Status Penanganan (4 kolom) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-extrabold text-slate-800">Grafik Status Penanganan</h3>
+                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold">Kab. Deiyai</span>
+              </div>
+              <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-4 my-auto">
+                <div class="relative w-36 h-36 shrink-0">
+                  <canvas id="statusDonutChart"></canvas>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span id="donut-center-total" class="text-xl font-black text-slate-900">124</span>
+                    <span class="text-[10px] font-semibold text-slate-500">Laporan</span>
+                  </div>
+                </div>
+                <div id="donut-legend" class="w-full space-y-1.5 text-xs"></div>
+              </div>
+            </div>
+
+            <!-- Peta Sebaran Kerusakan Jalan dan Jembatan - PETA SATELIT (5 kolom) -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-satellite text-emerald-700"></i>
+                  <h3 class="text-sm font-extrabold text-slate-800">Peta Sebaran Kerusakan Jalan dan Jembatan</h3>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <select id="map-layer-select" onchange="changeMapLayer(this.value)"
+                    class="text-xs border border-slate-300 rounded-lg px-2.5 py-1 bg-white font-bold text-emerald-900 outline-none cursor-pointer">
+                    <option value="satellite" selected>🛰️ Peta Satelit (Esri)</option>
+                    <option value="street">🗺️ Peta Jalan (OSM)</option>
+                    <option value="topo">⛰️ Peta Topografi</option>
+                  </select>
+                  <button onclick="switchAdminSection('peta')" title="Layar Penuh Peta Satelit"
+                    class="p-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs">
+                    <i class="fa-solid fa-expand"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="relative flex-1 min-h-[250px] rounded-xl overflow-hidden border border-slate-300 shadow-inner">
+                <div id="dashboard-map" class="w-full h-full min-h-[250px]"></div>
+                <!-- Legenda Overlay Peta Satelit -->
+                <div class="absolute bottom-2.5 right-2.5 z-20 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-xl shadow-md border border-slate-200 text-[11px] space-y-1">
+                  <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block ring-2 ring-red-200"></span><span class="font-bold text-slate-700">Rusak Berat</span></div>
+                  <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block ring-2 ring-amber-200"></span><span class="font-bold text-slate-700">Rusak Sedang</span></div>
+                  <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block ring-2 ring-emerald-200"></span><span class="font-bold text-slate-700">Rusak Ringan</span></div>
+                </div>
+                <div class="absolute bottom-2.5 left-2.5 z-20 bg-slate-900/80 text-white px-2.5 py-1 rounded-lg text-[10px] font-medium">
+                  Klik peta untuk ambil titik koordinat
+                </div>
+              </div>
+            </div>
+
+            <!-- Rekapitulasi per Distrik (3 kolom) -->
+            <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col">
+              <div class="flex items-center justify-between mb-2.5">
+                <h3 class="text-sm font-extrabold text-slate-800">Rekapitulasi per Distrik</h3>
+                <button onclick="switchAdminSection('rekapitulasi')" class="px-2.5 py-1 rounded-lg bg-[#065f46] text-white text-[11px] font-bold hover:bg-[#047857] transition">
+                  Lihat Semua
+                </button>
+              </div>
+              <div class="overflow-x-auto flex-1">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="border-b border-slate-200 text-slate-500 font-bold">
+                      <th class="py-2 pr-1">No</th>
+                      <th class="py-2 px-1">Distrik</th>
+                      <th class="py-2 px-1 text-center">Jml</th>
+                      <th class="py-2 px-1 text-center text-red-600">Berat</th>
+                      <th class="py-2 px-1 text-center text-amber-600">Sdg</th>
+                      <th class="py-2 pl-1 text-center text-emerald-700">Rgn</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-distrik-tbody" class="divide-y divide-slate-100"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 3. BARIS KETIGA: FORM INPUT (DENGAN UNGGAH FOTO) | DATA LAPORAN TERBARU | DETAIL LAPORAN + QR CODE + CETAK PDF RESMI -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Form Input Laporan Cepat Petugas + Unggah Foto Kerusakan (3 kolom) -->
+            <div id="dashboard-quick-input-card" class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="bg-[#065f46] text-white px-4 py-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-extrabold uppercase tracking-wide">Form Input Laporan</h3>
+                <span class="px-2 py-0.5 bg-white/15 rounded-md text-[10px] font-bold">+ Tambah</span>
+              </div>
+              <form id="quick-admin-form" onsubmit="handleQuickAdminSubmit(event)" class="p-3.5 space-y-2 text-xs flex-1 flex flex-col justify-between">
+                <div class="space-y-2">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block font-bold text-slate-600 mb-0.5">Tanggal Temuan</label>
+                      <input type="date" id="adm-tgl" required class="w-full px-2 py-1.5 rounded-lg border border-slate-300 outline-none focus:border-emerald-600 text-[11px]" />
+                    </div>
+                    <div>
+                      <label class="block font-bold text-slate-600 mb-0.5">Tingkat</label>
+                      <select id="adm-tingkat" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white outline-none text-[11px] font-semibold">
+                        <option value="Rusak Berat">Rusak Berat</option>
+                        <option value="Rusak Sedang">Rusak Sedang</option>
+                        <option value="Rusak Ringan">Rusak Ringan</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Nama Pelapor / Petugas</label>
+                    <input type="text" id="adm-pelapor" value="Klemensia Giyai, Amd.Keu" required class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 outline-none focus:border-emerald-600" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block font-bold text-slate-600 mb-0.5">Distrik</label>
+                      <select id="adm-distrik" required class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white outline-none">
+                        <option value="Tigi">Tigi</option>
+                        <option value="Tigi Timur">Tigi Timur</option>
+                        <option value="Tigi Barat">Tigi Barat</option>
+                        <option value="Bowobado">Bowobado</option>
+                        <option value="Kapiraya">Kapiraya</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block font-bold text-slate-600 mb-0.5">Kampung</label>
+                      <input type="text" id="adm-kampung" value="Wako" required class="w-full px-2 py-1.5 rounded-lg border border-slate-300 outline-none" />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block font-bold text-slate-600 mb-0.5">Nama / Ruas Jalan</label>
+                      <input type="text" id="adm-ruas" placeholder="Ruas Wako - Tigi" required class="w-full px-2 py-1.5 rounded-lg border border-slate-300 outline-none" />
+                    </div>
+                    <div>
+                      <label class="block font-bold text-slate-600 mb-0.5">Jenis Kerusakan</label>
+                      <select id="adm-jenis" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white outline-none">
+                        <option value="Lubang">Lubang</option>
+                        <option value="Retak">Retak</option>
+                        <option value="Amblas">Amblas</option>
+                        <option value="Longsor">Longsor</option>
+                        <option value="Jembatan Rusak">Jembatan Rusak</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Koordinat GPS (Lat, Lng)</label>
+                    <div class="flex gap-1">
+                      <input type="text" id="adm-coords" value="-4.054321, 136.284512" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-mono text-[11px] outline-none" />
+                      <button type="button" onclick="fillAdminGPS()" title="Ambil GPS" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Unggah Foto Kerusakan di Form Admin -->
+                  <div>
+                    <label class="block font-bold text-slate-600 mb-0.5">Unggah Foto Kerusakan</label>
+                    <div class="flex items-center gap-2">
+                      <label class="flex-1 cursor-pointer px-2.5 py-1.5 rounded-lg border border-dashed border-emerald-400 bg-emerald-50/60 hover:bg-emerald-100 text-emerald-900 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-camera"></i>
+                        <span id="adm-foto-label">Pilih Foto (JPG/PNG)</span>
+                        <input type="file" id="adm-foto" accept="image/jpeg,image/png,image/webp" class="hidden"
+                          onchange="handlePhotoUpload(this, 'adm-foto-preview', 'adm-foto-preview-box', 'adm')" />
+                      </label>
+                      <div id="adm-foto-preview-box" class="hidden relative shrink-0">
+                        <img id="adm-foto-preview" src="" class="w-10 h-8 object-cover rounded border border-slate-300" />
+                        <button type="button" onclick="clearPhotoUpload('adm-foto', 'adm-foto-preview-box', 'adm')" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] flex items-center justify-center">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="w-full mt-2 py-2.5 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white font-bold flex items-center justify-center gap-2 shadow-sm transition">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  <span>Simpan Laporan</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Data Laporan Terbaru (4 kolom) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="bg-[#065f46] text-white px-4 py-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-extrabold uppercase tracking-wide">Data Laporan Terbaru</h3>
+                <button onclick="switchAdminSection('data')" class="px-2.5 py-0.5 bg-white text-emerald-900 rounded-md text-[10px] font-bold hover:bg-emerald-50 transition">
+                  Lihat Semua
+                </button>
+              </div>
+              <div class="p-3 overflow-x-auto flex-1">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="border-b border-slate-200 text-slate-500 font-bold">
+                      <th class="py-2 pr-1">No</th>
+                      <th class="py-2 px-1">Tgl Lapor</th>
+                      <th class="py-2 px-1">Lokasi</th>
+                      <th class="py-2 px-1">Kerusakan</th>
+                      <th class="py-2 px-1">Status</th>
+                      <th class="py-2 pl-1 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-recent-tbody" class="divide-y divide-slate-100"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Detail Laporan + QR Code + Cetak PDF Resmi (5 kolom) -->
+            <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <!-- Card Detail Laporan (7 sub-kolom) -->
+              <div class="sm:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="bg-[#065f46] text-white px-4 py-2.5 flex items-center justify-between">
+                  <h3 class="text-xs font-extrabold uppercase tracking-wide">Detail Laporan</h3>
+                  <span id="detail-badge-severity" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-600 text-white">Rusak Berat</span>
+                </div>
+                <div class="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                  <div class="flex gap-3">
+                    <img id="detail-photo" src="" alt="Foto Kerusakan"
+                      class="w-24 h-28 object-cover rounded-xl border border-slate-300 shrink-0 shadow-sm bg-slate-100" />
+                    <div class="text-[11px] space-y-1 text-slate-700 overflow-hidden">
+                      <p class="font-extrabold text-slate-900 truncate" id="detail-no">No. Laporan : LP-2026-00124</p>
+                      <p class="truncate"><span class="text-slate-500">Lokasi :</span> <span id="detail-lokasi" class="font-bold">Tigi - Kampung Wako</span></p>
+                      <p class="truncate font-mono text-[10px]"><span class="text-slate-500 font-sans">Koordinat :</span> <span id="detail-koordinat">-4.054321, 136.284512</span></p>
+                      <p class="truncate"><span class="text-slate-500">Jenis :</span> <span id="detail-jenis" class="font-bold">Lubang, Retak</span></p>
+                      <p class="truncate"><span class="text-slate-500">Ukuran :</span> <span id="detail-ukuran">P = 12 m | L = 3 m | D = 0,4 m</span></p>
+                      <p class="truncate"><span class="text-slate-500">Status :</span> <span id="detail-status-text" class="font-bold text-sky-700">Dalam Penanganan</span></p>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="openDetailModal(selectedReportId)" class="py-2 px-2.5 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                      <i class="fa-solid fa-eye"></i>
+                      <span>Lihat Detail</span>
+                    </button>
+                    <button id="btn-detail-verify" onclick="openDetailModal(selectedReportId)" class="py-2 px-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                      <i class="fa-solid fa-check-double"></i>
+                      <span>Verifikasi</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card QR Code & Cetak Laporan PDF Resmi (5 sub-kolom) -->
+              <div class="sm:col-span-5 flex flex-col gap-3">
+                <!-- QR Code Box -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                  <div class="bg-[#065f46] text-white px-3 py-2 text-center">
+                    <h4 class="text-xs font-extrabold">QR Code Laporan</h4>
+                  </div>
+                  <div class="p-3 flex-1 flex flex-col items-center justify-center">
+                    <div id="dashboard-qrcode" class="p-1.5 bg-white border border-slate-200 rounded-lg shadow-inner"></div>
+                    <p id="qr-ticket-label" class="text-[11px] font-mono font-extrabold text-slate-800 mt-1.5">LP-2026-00124</p>
+                    <button onclick="downloadQRCode('dashboard-qrcode', document.getElementById('qr-ticket-label').innerText)"
+                      class="mt-2 w-full py-1.5 px-2.5 rounded-lg bg-[#065f46] hover:bg-[#047857] text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition">
+                      <i class="fa-solid fa-download"></i>
+                      <span>Download QR</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Cetak Laporan PDF Resmi Box -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="bg-[#065f46] text-white px-3 py-2 text-center">
+                    <h4 class="text-xs font-extrabold">Cetak Laporan PDF</h4>
+                  </div>
+                  <div class="p-2.5 text-center space-y-2">
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-[9px] text-slate-600 leading-tight">
+                      <p class="font-extrabold text-slate-800">PEMERINTAH KABUPATEN DEIYAI</p>
+                      <p class="font-bold text-emerald-800">DINAS PUPR • BERITA ACARA</p>
+                    </div>
+                    <button onclick="openOfficialPrintModal(selectedReportId)"
+                      class="w-full py-2 px-3 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition">
+                      <i class="fa-solid fa-print"></i>
+                      <span>Cetak PDF</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 4. BARIS KEEMPAT: REKAPITULASI PER KAMPUNG | PENGATURAN & PERAN PENGGUNA | PENGINGAT BACKUP DATABASE -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Rekapitulasi per Kampung (4 kolom) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="bg-[#065f46] text-white px-4 py-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-extrabold uppercase tracking-wide">Rekapitulasi per Kampung</h3>
+                <button onclick="switchAdminSection('rekapitulasi')" class="px-2.5 py-0.5 bg-white text-emerald-900 rounded-md text-[10px] font-bold hover:bg-emerald-50">Lihat Semua</button>
+              </div>
+              <div class="p-3 overflow-x-auto flex-1">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="border-b border-slate-200 text-slate-500 font-bold">
+                      <th class="py-1.5">No</th>
+                      <th class="py-1.5">Kampung</th>
+                      <th class="py-1.5">Distrik</th>
+                      <th class="py-1.5 text-center">Jml</th>
+                      <th class="py-1.5 text-center text-red-600">Berat</th>
+                      <th class="py-1.5 text-center text-amber-600">Sdg</th>
+                      <th class="py-1.5 text-center text-emerald-700">Rgn</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-kampung-tbody" class="divide-y divide-slate-100"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Pengaturan & Peran Pengguna Multi-Level (4 kolom) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="bg-[#065f46] text-white px-4 py-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-extrabold uppercase tracking-wide">Pengaturan & Peran Pengguna</h3>
+                <button onclick="switchAdminSection('pengguna')" class="px-2 py-0.5 bg-amber-400 text-slate-900 rounded text-[10px] font-extrabold">Kelola Peran</button>
+              </div>
+              <div class="p-3.5 space-y-2 text-xs text-slate-700 flex-1 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-800">Simulasi Login Multi-Level:</span>
+                    <div class="flex gap-1">
+                      <button onclick="switchUserRole('Admin')" class="role-pill px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white" data-role-pill="Admin">Admin</button>
+                      <button onclick="switchUserRole('Operator')" class="role-pill px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700" data-role-pill="Operator">Operator</button>
+                      <button onclick="switchUserRole('Kepala Bidang')" class="role-pill px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700" data-role-pill="Kepala Bidang">Kabid</button>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>Tampilan peta citra satelit Kabupaten Deiyai</span></div>
+                  <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>Unggah foto kerusakan & generator QR Code tiket</span></div>
+                  <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>Cetak lembar laporan resmi berkop Dinas PUPR (PDF)</span></div>
+                  <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>Export rekapitulasi distrik & kampung (CSV/Excel)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pengingat Backup Database (4 kolom) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="bg-[#065f46] text-white px-4 py-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-extrabold uppercase tracking-wide">Pengingat Backup Database</h3>
+                <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-900 text-[10px] font-extrabold">Terjadwal</span>
+              </div>
+              <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-200">
+                    <i class="fa-solid fa-database text-2xl"></i>
+                  </div>
+                  <div class="text-xs text-slate-600 space-y-1">
+                    <p class="leading-snug">Lakukan backup database setiap minggu untuk menjaga keamanan data laporan kerusakan infrastruktur.</p>
+                    <div class="flex items-center gap-1.5 text-slate-800 font-bold">
+                      <i class="fa-regular fa-calendar-check text-emerald-700"></i>
+                      <span>Jadwal: Setiap hari Minggu pukul 23:00 WIT</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-700 font-semibold">Backup Terakhir: <span id="last-backup-time">Minggu lalu, 23:00 WIT</span></p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="exportCSV()" class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                    <i class="fa-solid fa-file-csv text-emerald-700"></i>
+                    <span>Export CSV</span>
+                  </button>
+                  <button onclick="triggerDatabaseBackup()" class="py-2.5 px-3 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Backup Sekarang</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION B: DATA LAPORAN & VERIFIKASI LENGKAP                    -->
+        <!-- =============================================================== -->
+        <div id="section-data" class="hidden space-y-4 animate-fade-in">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div class="flex flex-wrap items-center gap-2 flex-1">
+                <div class="relative flex-1 min-w-[200px]">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                  <input type="text" id="data-search-input" onkeyup="renderFullDataTable()" placeholder="Cari nomor tiket, pelapor, ruas jalan, kampung..."
+                    class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 outline-none" />
+                </div>
+                <select id="data-filter-distrik" onchange="renderFullDataTable()" class="px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white outline-none">
+                  <option value="ALL">Semua Distrik</option>
+                  <option value="Tigi">Tigi</option>
+                  <option value="Tigi Timur">Tigi Timur</option>
+                  <option value="Tigi Barat">Tigi Barat</option>
+                  <option value="Bowobado">Bowobado</option>
+                  <option value="Kapiraya">Kapiraya</option>
+                </select>
+                <select id="data-filter-kampung" onchange="renderFullDataTable()" class="px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white outline-none">
+                  <option value="ALL">Semua Kampung</option>
+                </select>
+                <select id="data-filter-severity" onchange="renderFullDataTable()" class="px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white outline-none">
+                  <option value="ALL">Semua Tingkat</option>
+                  <option value="Rusak Berat">Rusak Berat</option>
+                  <option value="Rusak Sedang">Rusak Sedang</option>
+                  <option value="Rusak Ringan">Rusak Ringan</option>
+                </select>
+                <select id="data-filter-status" onchange="renderFullDataTable()" class="px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white outline-none">
+                  <option value="ALL">Semua Status</option>
+                  <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                  <option value="Dalam Penanganan">Dalam Penanganan</option>
+                  <option value="Selesai">Selesai</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="exportCSV()" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-excel"></i>
+                  <span>Export CSV</span>
+                </button>
+                <button id="btn-data-add-new" onclick="switchAdminSection('input')" class="px-3.5 py-2 rounded-xl bg-[#065f46] text-white hover:bg-[#047857] text-xs font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-plus"></i>
+                  <span>Input Baru</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto mt-4">
+              <table class="w-full text-xs text-left">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 font-extrabold border-y border-slate-200">
+                    <th class="py-3 px-3">No. Tiket</th>
+                    <th class="py-3 px-3">Tanggal</th>
+                    <th class="py-3 px-3">Foto</th>
+                    <th class="py-3 px-3">Distrik / Kampung</th>
+                    <th class="py-3 px-3">Ruas Jalan / Jembatan</th>
+                    <th class="py-3 px-3">Kerusakan</th>
+                    <th class="py-3 px-3">Tingkat</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="full-data-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION C: PETA SATELIT LOKASI FULLSCREEN                       -->
+        <!-- =============================================================== -->
+        <div id="section-peta" class="hidden space-y-4 animate-fade-in">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-800">Peta Citra Satelit Sebaran Kerusakan Jalan & Jembatan Kabupaten Deiyai</h3>
+                <p class="text-xs text-slate-500">Gunakan kontrol layer di kanan untuk beralih antara Citra Satelit Esri, Peta Jalan OSM, dan Topografi.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="changeFullMapLayer('satellite')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#065f46] text-white shadow-sm">🛰️ Citra Satelit</button>
+                <button onclick="changeFullMapLayer('street')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">🗺️ Peta Jalan</button>
+                <button onclick="changeFullMapLayer('topo')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">⛰️ Topografi</button>
+              </div>
+            </div>
+            <div id="full-map" class="w-full h-[530px] rounded-xl border border-slate-300"></div>
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION D: INPUT LAPORAN TEKNIS LENGKAP + UNGGAH FOTO           -->
+        <!-- =============================================================== -->
+        <div id="section-input" class="hidden animate-fade-in">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 max-w-4xl">
+            <h3 class="text-base font-extrabold text-slate-900 pb-3 border-b border-slate-100">Input Data Survei & Laporan Teknis Lapangan</h3>
+            <form onsubmit="handleFullAdminSubmit(event)" class="mt-4 space-y-4 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Tanggal Survei / Temuan *</label>
+                  <input type="date" id="full-adm-tgl" required class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-600" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Nama Petugas / Pelapor *</label>
+                  <input type="text" id="full-adm-pelapor" value="Tim Survei Bina Marga Deiyai" required class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-600" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">No. HP Kontak</label>
+                  <input type="text" id="full-adm-hp" value="081248001122" class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-600" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Distrik *</label>
+                  <select id="full-adm-distrik" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white outline-none">
+                    <option value="Tigi">Tigi</option>
+                    <option value="Tigi Timur">Tigi Timur</option>
+                    <option value="Tigi Barat">Tigi Barat</option>
+                    <option value="Bowobado">Bowobado</option>
+                    <option value="Kapiraya">Kapiraya</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Kampung *</label>
+                  <input type="text" id="full-adm-kampung" required placeholder="Contoh: Wako, Idake, Mugi" class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Kategori Objek *</label>
+                  <select id="full-adm-kategori" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white outline-none">
+                    <option value="Jalan">Jalan</option>
+                    <option value="Jembatan">Jembatan</option>
+                    <option value="Gorong-gorong / Drainase">Gorong-gorong / Drainase</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Nama Ruas Jalan / Jembatan *</label>
+                  <input type="text" id="full-adm-ruas" required placeholder="Contoh: Ruas Jalan Waghete - Bomou" class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Dimensi Kerusakan (P x L x D)</label>
+                  <input type="text" id="full-adm-ukuran" placeholder="Contoh: P = 15 m | L = 3,5 m | D = 0,3 m" class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Jenis Kerusakan *</label>
+                  <select id="full-adm-jenis" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white outline-none">
+                    <option value="Lubang">Lubang</option>
+                    <option value="Retak">Retak</option>
+                    <option value="Amblas">Amblas</option>
+                    <option value="Longsor">Longsor</option>
+                    <option value="Bahu Rusak">Bahu Rusak</option>
+                    <option value="Jembatan Rusak">Jembatan Rusak</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Tingkat Kerusakan *</label>
+                  <select id="full-adm-tingkat" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white outline-none">
+                    <option value="Rusak Berat">Rusak Berat</option>
+                    <option value="Rusak Sedang">Rusak Sedang</option>
+                    <option value="Rusak Ringan">Rusak Ringan</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Status Awal *</label>
+                  <select id="full-adm-status" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white outline-none">
+                    <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                    <option value="Dalam Penanganan">Dalam Penanganan</option>
+                    <option value="Selesai">Selesai</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Latitude</label>
+                  <input type="text" id="full-adm-lat" value="-4.058210" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono outline-none" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Longitude</label>
+                  <input type="text" id="full-adm-lng" value="136.289410" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono outline-none" />
+                </div>
+              </div>
+
+              <!-- Unggah Foto di Form Input Lengkap -->
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Unggah Foto Dokumentasi Kerusakan</label>
+                <div class="flex flex-wrap items-center gap-4">
+                  <input type="file" id="full-adm-foto" accept="image/jpeg,image/png,image/webp"
+                    onchange="handlePhotoUpload(this, 'full-adm-foto-preview', 'full-adm-foto-wrapper', 'full')"
+                    class="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-800 hover:file:bg-emerald-100 border border-slate-300 rounded-xl p-1.5 bg-white" />
+                  <div id="full-adm-foto-wrapper" class="hidden relative inline-block">
+                    <img id="full-adm-foto-preview" src="" class="h-24 w-36 object-cover rounded-xl border border-slate-300" />
+                    <button type="button" onclick="clearPhotoUpload('full-adm-foto', 'full-adm-foto-wrapper', 'full')" class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Rekomendasi Teknis / Catatan</label>
+                <textarea id="full-adm-catatan" rows="3" placeholder="Uraian teknis kebutuhan material dan metode penanganan..." class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none"></textarea>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="switchAdminSection('dashboard')" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold">Batal</button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white font-bold shadow">Simpan Laporan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION E: REKAPITULASI PER DISTRIK & PER KAMPUNG LENGKAP       -->
+        <!-- =============================================================== -->
+        <div id="section-rekapitulasi" class="hidden space-y-5 animate-fade-in">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Rekap Distrik -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="text-sm font-extrabold text-slate-900">Rekapitulasi Kerusakan per Distrik</h3>
+                  <p class="text-[11px] text-slate-500">Klik baris distrik untuk melihat daftar laporannya</p>
+                </div>
+                <button onclick="exportCSV()" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">Export CSV</button>
+              </div>
+              <table class="w-full text-xs text-left">
+                <thead>
+                  <tr class="bg-slate-50 border-y border-slate-200 text-slate-600 font-bold">
+                    <th class="py-2.5 px-2">No</th>
+                    <th class="py-2.5 px-2">Distrik</th>
+                    <th class="py-2.5 px-2 text-center">Jumlah</th>
+                    <th class="py-2.5 px-2 text-center text-red-600">Rusak Berat</th>
+                    <th class="py-2.5 px-2 text-center text-amber-600">Sedang</th>
+                    <th class="py-2.5 px-2 text-center text-emerald-700">Ringan</th>
+                  </tr>
+                </thead>
+                <tbody id="full-distrik-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+
+            <!-- Rekap Kampung Lengkap -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="text-sm font-extrabold text-slate-900">Rekapitulasi Kerusakan per Kampung</h3>
+                  <p class="text-[11px] text-slate-500">Klik baris kampung untuk menyaring data laporan kampung tersebut</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-bold">Kab. Deiyai</span>
+              </div>
+              <table class="w-full text-xs text-left">
+                <thead>
+                  <tr class="bg-slate-50 border-y border-slate-200 text-slate-600 font-bold">
+                    <th class="py-2.5 px-2">No</th>
+                    <th class="py-2.5 px-2">Kampung</th>
+                    <th class="py-2.5 px-2">Distrik</th>
+                    <th class="py-2.5 px-2 text-center">Jumlah</th>
+                    <th class="py-2.5 px-2 text-center text-red-600">Berat</th>
+                    <th class="py-2.5 px-2 text-center text-amber-600">Sedang</th>
+                    <th class="py-2.5 px-2 text-center text-emerald-700">Ringan</th>
+                  </tr>
+                </thead>
+                <tbody id="full-kampung-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION F: MANAJEMEN PENGGUNA & PERAN (ADMIN/OPERATOR/KABID)    -->
+        <!-- =============================================================== -->
+        <div id="section-pengguna" class="hidden space-y-5 animate-fade-in">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900">Manajemen Pengguna & Hak Akses Multi-Level</h3>
+                <p class="text-xs text-slate-500">Struktur kewenangan petugas Dinas PUPR Kabupaten Deiyai pada sistem SIPJ.</p>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="text-slate-500">Uji Peran Aktif:</span>
+                <button onclick="switchUserRole('Admin')" class="px-3 py-1.5 rounded-xl bg-emerald-800 text-white font-bold">Admin</button>
+                <button onclick="switchUserRole('Operator')" class="px-3 py-1.5 rounded-xl bg-sky-700 text-white font-bold">Operator</button>
+                <button onclick="switchUserRole('Kepala Bidang')" class="px-3 py-1.5 rounded-xl bg-amber-600 text-white font-bold">Kepala Bidang</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div class="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-800 text-white font-extrabold">Admin</span>
+                  <span class="text-emerald-700 font-bold">Full Access</span>
+                </div>
+                <p class="font-bold text-slate-900">Administrator Sistem SIPJ</p>
+                <p class="text-slate-600">Mengelola seluruh data laporan, verifikasi, penghapusan data duplikat, manajemen akun petugas, serta backup database.</p>
+              </div>
+              <div class="p-4 rounded-2xl border border-sky-200 bg-sky-50/50 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 rounded-lg bg-sky-700 text-white font-extrabold">Operator</span>
+                  <span class="text-sky-700 font-bold">Survei & Lapangan</span>
+                </div>
+                <p class="font-bold text-slate-900">Operator / Petugas Lapangan</p>
+                <p class="text-slate-600">Menginput hasil survei kerusakan jalan/jembatan, mengunggah foto dokumentasi lapangan, dan memperbarui progres penanganan fisik.</p>
+              </div>
+              <div class="p-4 rounded-2xl border border-amber-200 bg-amber-50/50 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-extrabold">Kepala Bidang</span>
+                  <span class="text-amber-800 font-bold">Monitoring & Approval</span>
+                </div>
+                <p class="font-bold text-slate-900">Kepala Bidang Bina Marga</p>
+                <p class="text-slate-600">Memantau rekapitulasi kerusakan per distrik/kampung, menyetujui verifikasi teknis, dan menandatangani laporan PDF resmi.</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto pt-2">
+              <table class="w-full text-xs text-left">
+                <thead>
+                  <tr class="bg-slate-50 border-y border-slate-200 text-slate-600 font-bold">
+                    <th class="py-2.5 px-3">Nama Petugas</th>
+                    <th class="py-2.5 px-3">NIP / Username</th>
+                    <th class="py-2.5 px-3">Jabatan</th>
+                    <th class="py-2.5 px-3">Peran Sistem</th>
+                    <th class="py-2.5 px-3">Status</th>
+                    <th class="py-2.5 px-3 text-center">Simulasi Masuk</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr>
+                    <td class="py-3 px-3 font-bold">Administrator PUPR</td>
+                    <td class="py-3 px-3 font-mono">admin.pupr</td>
+                    <td class="py-3 px-3">Admin Sistem Informasi</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Admin</span></td>
+                    <td class="py-3 px-3 text-emerald-700 font-bold">● Aktif</td>
+                    <td class="py-3 px-3 text-center"><button onclick="switchUserRole('Admin')" class="px-3 py-1 rounded-lg bg-emerald-700 text-white font-bold">Gunakan Peran</button></td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-3 font-bold">Klemensia Giyai, Amd.Keu</td>
+                    <td class="py-3 px-3 font-mono">operator.binamarga</td>
+                    <td class="py-3 px-3">Staf Seksi Preservasi Jalan & Jembatan</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-bold">Operator</span></td>
+                    <td class="py-3 px-3 text-emerald-700 font-bold">● Aktif</td>
+                    <td class="py-3 px-3 text-center"><button onclick="switchUserRole('Operator')" class="px-3 py-1 rounded-lg bg-sky-700 text-white font-bold">Gunakan Peran</button></td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-3 font-bold">Ir. Melkianus Mote, ST</td>
+                    <td class="py-3 px-3 font-mono">kabid.binamarga</td>
+                    <td class="py-3 px-3">Kepala Bidang Bina Marga</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Kepala Bidang</span></td>
+                    <td class="py-3 px-3 text-emerald-700 font-bold">● Aktif</td>
+                    <td class="py-3 px-3 text-center"><button onclick="switchUserRole('Kepala Bidang')" class="px-3 py-1 rounded-lg bg-amber-600 text-white font-bold">Gunakan Peran</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION G: PENGATURAN BACKUP & SUPABASE                         -->
+        <!-- =============================================================== -->
+        <div id="section-pengaturan" class="hidden space-y-5 animate-fade-in">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Pengaturan Backup Otomatis & Manual -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+              <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <i class="fa-solid fa-database text-lg"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-extrabold text-slate-900">Jadwal & Pengingat Backup Database</h3>
+                  <p class="text-xs text-slate-500">Cadangkan seluruh laporan kerusakan, koordinat GPS, dan dokumentasi foto.</p>
+                </div>
+              </div>
+              <div class="space-y-3 text-xs">
+                <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p class="font-bold text-emerald-900">Jadwal Backup Otomatis Mingguan</p>
+                    <p class="text-emerald-700">Setiap hari Minggu pukul 23:00 WIT</p>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold">AKTIF</span>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                  <button onclick="resetDemoDatabase()" class="px-3.5 py-2 rounded-xl bg-red-50 text-red-700 border border-red-200 font-bold hover:bg-red-100">
+                    Reset Data Awal
+                  </button>
+                  <button onclick="triggerDatabaseBackup()" class="px-4 py-2 rounded-xl bg-[#065f46] text-white font-bold hover:bg-[#047857] flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Backup Database Sekarang (.JSON)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Konfigurasi Supabase -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3 text-xs">
+              <h3 class="text-sm font-extrabold text-slate-900">Integrasi Cloud Supabase (Opsional)</h3>
+              <p class="text-slate-500">Secara default sistem menggunakan penyimpanan lokal cepat (LocalStorage). Anda juga dapat menghubungkan ke proyek Supabase.</p>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">SUPABASE_URL</label>
+                <input type="text" id="supa-url" placeholder="https://pupr-deiyai.supabase.co" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono outline-none" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">SUPABASE_ANON_KEY</label>
+                <input type="password" id="supa-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono outline-none" />
+              </div>
+              <button onclick="saveSupabaseConfig()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold">Simpan Kredensial Supabase</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Footer Instansi -->
+    <footer class="bg-[#064e3b] text-white py-2.5 px-5 text-xs flex flex-col sm:flex-row items-center justify-between gap-2 no-print">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-leaf text-amber-400"></i>
+        <span>Bersama Kita Wujudkan Infrastruktur Jalan dan Jembatan yang Aman dan Berkualitas</span>
+      </div>
+      <div class="text-emerald-200 font-semibold">
+        SIPJ Dinas PUPR Kabupaten Deiyai | Bidang Bina Marga • Papua Tengah, Indonesia
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: TIKET BERHASIL DIKIRIM (DENGAN QR CODE & UNDUH QR)            -->
+  <!-- ===================================================================== -->
+  <div id="ticket-success-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
+      <div class="bg-[#065f46] text-white p-5 text-center">
+        <div class="w-12 h-12 rounded-full bg-white/20 text-amber-300 flex items-center justify-center mx-auto mb-2 text-2xl">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 class="text-lg font-extrabold">Laporan Berhasil Disimpan!</h3>
+        <p class="text-xs text-emerald-100 mt-0.5">Gunakan Nomor Tiket atau QR Code di bawah ini untuk pelacakan.</p>
+      </div>
+      <div class="p-5 text-center space-y-4">
+        <div class="bg-slate-50 border-2 border-dashed border-emerald-400 rounded-2xl p-4">
+          <p class="text-[11px] font-bold uppercase text-slate-500">Nomor Tiket Pengaduan</p>
+          <p id="modal-new-ticket-number" class="text-2xl font-mono font-black text-[#065f46] tracking-wider mt-1">LP-2026-00125</p>
+          <div id="modal-new-ticket-qr" class="mt-3 flex justify-center"></div>
+          <p id="modal-new-ticket-summary" class="text-xs text-slate-600 mt-3 font-semibold"></p>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="downloadQRCode('modal-new-ticket-qr', document.getElementById('modal-new-ticket-number').innerText)"
+            class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-download text-emerald-700"></i>
+            <span>Download QR</span>
+          </button>
+          <button onclick="trackNewlyCreatedTicket()"
+            class="py-2.5 px-3 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-magnifying-glass-location"></i>
+            <span>Lacak Tiket</span>
+          </button>
+        </div>
+        <button onclick="closeModal('ticket-success-modal')" class="w-full py-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: LOGIN INTERNAL PUPR (PILIH PERAN: ADMIN / OPERATOR / KABID)  -->
+  <!-- ===================================================================== -->
+  <div id="login-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
+      <div class="bg-gradient-to-r from-[#064e3b] to-[#065f46] text-white p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-amber-300">
+            <i class="fa-solid fa-user-shield text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold">Login Internal SIPJ</h3>
+            <p class="text-[11px] text-emerald-200">Dinas PUPR Kabupaten Deiyai</p>
+          </div>
+        </div>
+        <button onclick="closeModal('login-modal')" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        <form onsubmit="handleInternalLogin(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Pilih Peran Pengguna</label>
+            <select id="login-role-select" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-800 outline-none focus:border-emerald-600">
+              <option value="Admin">Admin — Administrator Sistem (Full Akses)</option>
+              <option value="Operator">Operator — Petugas Survei & Lapangan</option>
+              <option value="Kepala Bidang">Kepala Bidang — Bina Marga (Monitoring & Approval)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Username / NIP</label>
+            <input type="text" id="login-username" value="admin.pupr" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-600" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kata Sandi</label>
+            <input type="password" id="login-password" value="deiyai2026" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-600" />
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white font-extrabold text-sm shadow transition">
+            Masuk ke Dashboard Internal
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 3: DETAIL LENGKAP, VERIFIKASI & UBAH STATUS                     -->
+  <!-- ===================================================================== -->
+  <div id="detail-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in max-h-[90vh] flex flex-col">
+      <div class="bg-[#065f46] text-white px-5 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-lines text-amber-300"></i>
+          <h3 class="text-sm font-extrabold">Detail Laporan & Verifikasi Teknis</h3>
+        </div>
+        <button onclick="closeModal('detail-modal')" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="detail-modal-body" class="p-5 overflow-y-auto space-y-4 text-xs"></div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 4: CETAK PDF RESMI (BERKOP DINAS PUPR KABUPATEN DEIYAI)         -->
+  <!-- ===================================================================== -->
+  <div id="print-modal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="bg-slate-800 text-white px-5 py-3 flex items-center justify-between no-print">
+        <span class="text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-file-pdf text-rose-400"></i> Dokumen Resmi Laporan Kerusakan Infrastruktur (Siap Cetak / Save as PDF)</span>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+          </button>
+          <button onclick="closeModal('print-modal')" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold">Tutup</button>
+        </div>
+      </div>
+      <div id="print-document-root" class="p-6 sm:p-8 overflow-y-auto bg-white text-slate-900 space-y-5">
+        <!-- Kop Surat & Isi Laporan Resmi diisi via JS -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT: DATA REALISTIS KAB. DEIYAI, PETA SATELIT, QR, ROLE & CRUD -->
+  <!-- ===================================================================== -->
+  <script>
+    // 1. GENERATOR ILUSTRASI SVG FOTO KERUSAKAN REALISTIS (Agar Data Awal Tampil Tajam Tanpa Broken Link)
+    function generateDamagePhotoSVG(type, title, district) {
+      const palettes = {
+        "Lubang": { bg: "#334155", road: "#475569", accent: "#dc2626" },
+        "Retak": { bg: "#3f3f46", road: "#52525b", accent: "#eab308" },
+        "Amblas": { bg: "#451a03", road: "#57534e", accent: "#dc2626" },
+        "Longsor": { bg: "#365314", road: "#57534e", accent: "#ea580c" },
+        "Jembatan Rusak": { bg: "#1e3a8a", road: "#78350f", accent: "#f59e0b" },
+        "Bahu Rusak": { bg: "#064e3b", road: "#475569", accent: "#0284c7" }
+      };
+      const p = palettes[type] || palettes["Lubang"];
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+        <rect width="600" height="400" fill="${p.bg}"/>
+        <!-- Langit & Pegunungan Deiyai -->
+        <rect width="600" height="140" fill="#0284c7" opacity="0.35"/>
+        <path d="M0 140 L120 75 L250 125 L390 65 L520 115 L600 85 L600 140 Z" fill="#065f46"/>
+        <!-- Badan Jalan Perspektif -->
+        <polygon points="150,140 450,140 590,400 10,400" fill="${p.road}"/>
+        <line x1="300" y1="145" x2="300" y2="395" stroke="#facc15" stroke-width="6" stroke-dasharray="22,18"/>
+        <!-- Visual Kerusakan -->
+        <ellipse cx="265" cy="275" rx="75" ry="38" fill="#1c1917" stroke="${p.accent}" stroke-width="5"/>
+        <ellipse cx="345" cy="330" rx="52" ry="24" fill="#292524" stroke="${p.accent}" stroke-width="4"/>
+        <path d="M180 230 L240 260 L215 310 M360 220 L330 270 L385 310" stroke="#0f172a" stroke-width="5" fill="none"/>
+        <!-- Label Dokumentasi Lapangan -->
+        <rect x="16" y="16" width="568" height="44" rx="10" fill="rgba(15,23,42,0.78)"/>
+        <text x="30" y="43" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">DOKUMENTASI: ${type.toUpperCase()} — ${title}</text>
+        <rect x="16" y="346" width="320" height="36" rx="8" fill="rgba(6,95,70,0.9)"/>
+        <text x="30" y="369" fill="#fef08a" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Distrik ${district} • Kab. Deiyai</text>
+      </svg>`;
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+
+    // 2. DATA MASTER DISTRIK & KAMPUNG KABUPATEN DEIYAI
+    const DEIYAI_DISTRIK_KAMPUNG = {
+      "Tigi": ["Wako", "Waghete I", "Waghete II", "Amago", "Atouda", "Okomokebo"],
+      "Tigi Timur": ["Idake", "Bagou", "Dagouto", "Edagotadi", "Diyai"],
+      "Tigi Barat": ["Mugi", "Ayatei", "Demago", "Digibagata", "Ugiya"],
+      "Bowobado": ["Wania", "Kopai", "Diita", "Woge", "Bomou"],
+      "Kapiraya": ["Kogima", "Komauto", "Mogodagi", "Damabagata"]
+    };
+
+    // 3. DATA AWAL REALISTIS (12 TITIK DI SEKITAR KABUPATEN DEIYAI & DANAU TIGI)
+    const INITIAL_REPORTS = [
+      {
+        id: "LP-2026-00124",
+        tanggal: "2026-11-23",
+        namaPelapor: "Yohanes Pigai",
+        nomorHp: "081248112233",
+        distrik: "Tigi",
+        kampung: "Wako",
+        kategoriObjek: "Jalan",
+        namaRuas: "Jalan Trans Nabire - Deiyai (Segmen Wako)",
+        jenisKerusakan: "Lubang, Retak",
+        tingkatKerusakan: "Rusak Berat",
+        patokanLokasi: "Dekat Jembatan Wako / SD Inpres Wako",
+        dampak: "Mengganggu sebagian",
+        latitude: -4.054321,
+        longitude: 136.284512,
+        ukuran: "P = 12 m | L = 3 m | D = 0,4 m",
+        foto: generateDamagePhotoSVG("Lubang", "Ruas Trans Deiyai - Wako", "Tigi"),
+        usulan: "Penambalan agregat kelas A dan pengaspalan ulang",
+        keterangan: "Lubang dalam berdiameter besar di badan jalan utama penghubung distrik, rawan kecelakaan saat hujan.",
+        status: "Dalam Penanganan"
+      },
+      {
+        id: "LP-2026-00123",
+        tanggal: "2026-11-22",
+        namaPelapor: "Klemensia Giyai, Amd.Keu",
+        nomorHp: "081344556677",
+        distrik: "Tigi Timur",
+        kampung: "Idake",
+        kategoriObjek: "Jalan",
+        namaRuas: "Ruas Jalan Waghete - Idake",
+        jenisKerusakan: "Retak",
+        tingkatKerusakan: "Rusak Sedang",
+        patokanLokasi: "Depan Balai Kampung Idake",
+        dampak: "Tidak mengganggu",
+        latitude: -4.048120,
+        longitude: 136.312450,
+        ukuran: "P = 25 m | L = 2,5 m | D = 0,1 m",
+        foto: generateDamagePhotoSVG("Retak", "Ruas Waghete - Idake", "Tigi Timur"),
+        usulan: "Sealing retak dan pelapisan ulang",
+        keterangan: "Retak permukaan memanjang akibat beban kendaraan logistik.",
+        status: "Menunggu Verifikasi"
+      },
+      {
+        id: "LP-2026-00122",
+        tanggal: "2026-11-20",
+        namaPelapor: "Markus Mote",
+        nomorHp: "082199887766",
+        distrik: "Tigi Barat",
+        kampung: "Mugi",
+        kategoriObjek: "Jalan",
+        namaRuas: "Jalan Poros Tigi Barat - Mugi",
+        jenisKerusakan: "Amblas",
+        tingkatKerusakan: "Rusak Berat",
+        patokanLokasi: "Tikungan Tebing Mugi KM 14",
+        dampak: "Mengganggu sebagian",
+        latitude: -4.069400,
+        longitude: 136.245800,
+        ukuran: "P = 18 m | L = 4 m | D = 0,6 m",
+        foto: generateDamagePhotoSVG("Amblas", "Poros Tigi Barat - Mugi", "Tigi Barat"),
+        usulan: "Pemasangan bronjong penahan tebing dan timbunan pilihan",
+        keterangan: "Badan jalan turun sekitar 60 cm akibat gerusan air hujan di sisi lereng.",
+        status: "Dalam Penanganan"
+      },
+      {
+        id: "LP-2026-00121",
+        tanggal: "2026-11-18",
+        namaPelapor: "Petrus Pekei",
+        nomorHp: "085211223344",
+        distrik: "Bowobado",
+        kampung: "Wania",
+        kategoriObjek: "Jalan",
+        namaRuas: "Ruas Penghubung Tigi - Bowobado",
+        jenisKerusakan: "Longsor",
+        tingkatKerusakan: "Rusak Berat",
+        patokanLokasi: "Perbatasan Kampung Wania",
+        dampak: "Memutus akses",
+        latitude: -4.092100,
+        longitude: 136.328900,
+        ukuran: "P = 30 m | L = 5 m | D = 1,2 m",
+        foto: generateDamagePhotoSVG("Longsor", "Ruas Penghubung Wania", "Bowobado"),
+        usulan: "Pembersihan material longsor dengan alat berat excavator",
+        keterangan: "Material tanah dan batu sempat menutup badan jalan, telah dibersihkan tim Bina Marga.",
+        status: "Selesai"
+      },
+      {
+        id: "LP-2026-00120",
+        tanggal: "2026-11-15",
+        namaPelapor: "Agustinus Edowai",
+        nomorHp: "081277665544",
+        distrik: "Kapiraya",
+        kampung: "Kogima",
+        kategoriObjek: "Gorong-gorong / Drainase",
+        namaRuas: "Jalan Lingkungan Kampung Kogima",
+        jenisKerusakan: "Bahu Rusak",
+        tingkatKerusakan: "Rusak Ringan",
+        patokanLokasi: "Simpang Tiga Kogima",
+        dampak: "Tidak mengganggu",
+        latitude: -4.115400,
+        longitude: 136.261200,
+        ukuran: "P = 8 m | L = 1,5 m | D = 0,25 m",
+        foto: generateDamagePhotoSVG("Bahu Rusak", "Jalan Kampung Kogima", "Kapiraya"),
+        usulan: "Normalisasi saluran drainase dan perkerasan bahu jalan",
+        keterangan: "Bahu jalan tergerus air luapan drainase saat hujan deras.",
+        status: "Dalam Penanganan"
+      },
+      {
+        id: "LP-2026-00119",
+        tanggal: "2026-11-12",
+        namaPelapor: "Maria Douw",
+        nomorHp: "081355443322",
+        distrik: "Tigi",
+        kampung: "Waghete I",
+        kategoriObjek: "Jembatan",
+        namaRuas: "Jembatan Sungai Waghete I",
+        jenisKerusakan: "Jembatan Rusak",
+        tingkatKerusakan: "Rusak Sedang",
+        patokanLokasi: "Dekat Pasar Sentral Waghete",
+        dampak: "Mengganggu sebagian",
+        latitude: -4.041800,
+        longitude: 136.278900,
+        ukuran: "P = 6 m | L = 4 m | D = 0,15 m",
+        foto: generateDamagePhotoSVG("Jembatan Rusak", "Jembatan Sungai Waghete I", "Tigi"),
+        usulan: "Penggantian papan lantai jembatan dan pengelasan gelagar",
+        keterangan: "Beberapa bagian lantai jembatan mengalami pelapukan dan baut pengikat kendor.",
+        status: "Menunggu Verifikasi"
+      },
+      {
+        id: "LP-2026-00118",
+        tanggal: "2026-11-10",
+        namaPelapor: "Silas Adii",
+        nomorHp: "082233445566",
+        distrik: "Bowobado",
+        kampung: "Kopai",
+        kategoriObjek: "Jalan",
+        namaRuas: "Ruas Jalan Bowobado - Kopai",
+        jenisKerusakan: "Lubang",
+        tingkatKerusakan: "Rusak Ringan",
+        patokanLokasi: "Dekat Puskesmas Pembantu Kopai",
+        dampak: "Tidak mengganggu",
+        latitude: -4.084200,
+        longitude: 136.318500,
+        ukuran: "P = 5 m | L = 2 m | D = 0,15 m",
+        foto: generateDamagePhotoSVG("Lubang", "Ruas Bowobado - Kopai", "Bowobado"),
+        usulan: "Penambalan lubang (patching)",
+        keterangan: "Terdapat beberapa titik lubang kecil di permukaan perkerasan.",
+        status: "Selesai"
+      },
+      {
+        id: "LP-2026-00117",
+        tanggal: "2026-11-08",
+        namaPelapor: "Lukas Badokapa",
+        nomorHp: "081248990011",
+        distrik: "Tigi",
+        kampung: "Amago",
+        kategoriObjek: "Jalan",
+        namaRuas: "Ruas Jalan Lingkar Danau Tigi - Amago",
+        jenisKerusakan: "Amblas",
+        tingkatKerusakan: "Rusak Sedang",
+        patokanLokasi: "Tepi Danau Tigi Kampung Amago",
+        dampak: "Mengganggu sebagian",
+        latitude: -4.035900,
+        longitude: 136.292100,
+        ukuran: "P = 14 m | L = 3 m | D = 0,35 m",
+        foto: generateDamagePhotoSVG("Amblas", "Lingkar Danau Tigi - Amago", "Tigi"),
+        usulan: "Perkuatan talud tepi danau dan timbunan batu pecah",
+        keterangan: "Penurunan badan jalan akibat abrasi gelombang air Danau Tigi.",
+        status: "Menunggu Verifikasi"
+      }
+    ];
+
+    // Baseline historis tahunan agar KPI dashboard mencerminkan total akumulasi 124 laporan
+    const HISTORICAL_OFFSET = {
+      total: 116,
+      berat: 29,
+      sedang: 45,
+      ringan: 26,
+      verif: 7,
+      progress: 15,
+      done: 26
+    };
+
+    // STATE APLIKASI
+    let reports = [];
+    let selectedReportId = "LP-2026-00124";
+    let currentUserRole = "Admin"; // 'Admin' | 'Operator' | 'Kepala Bidang'
+    let statusChartInstance = null;
+    let dashboardMap = null;
+    let fullMap = null;
+    let dashboardTileLayer = null;
+    let fullTileLayer = null;
+    let dashboardMarkersGroup = null;
+    let fullMarkersGroup = null;
+    let lastCreatedTicketId = "";
+
+    // Buffer foto unggahan per form
+    const photoBuffers = {
+      pub: "",
+      adm: "",
+      full: ""
+    };
+
+    // INISIALISASI HALAMAN
+    window.addEventListener('DOMContentLoaded', () => {
+      loadReportsFromStorage();
+      setDefaultDates();
+      populateKampungFilterDropdown();
+      applyRolePermissions();
+      updateAllViews();
+      initDashboardMap();
+    });
+
+    function loadReportsFromStorage() {
+      const saved = localStorage.getItem('sipj_deiyai_reports_v2');
+      if (saved) {
+        try {
+          reports = JSON.parse(saved);
+        } catch (e) {
+          reports = [...INITIAL_REPORTS];
+        }
+      } else {
+        reports = [...INITIAL_REPORTS];
+        saveReportsToStorage();
+      }
+      if (reports.length > 0) {
+        selectedReportId = reports[0].id;
+      }
+    }
+
+    function saveReportsToStorage() {
+      localStorage.setItem('sipj_deiyai_reports_v2', JSON.stringify(reports));
+    }
+
+    function setDefaultDates() {
+      const todayISO = new Date().toISOString().split('T')[0];
+      const admTgl = document.getElementById('adm-tgl');
+      const fullAdmTgl = document.getElementById('full-adm-tgl');
+      if (admTgl) admTgl.value = todayISO;
+      if (fullAdmTgl) fullAdmTgl.value = todayISO;
+
+      const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+      document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('id-ID', options);
+    }
+
+    // =========================================================================
+    // TOAST NOTIFICATION (PENGGANTI ALERT)
+    // =========================================================================
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-800 text-white border-emerald-600',
+        info: 'bg-slate-800 text-white border-slate-600',
+        warning: 'bg-amber-600 text-white border-amber-400',
+        error: 'bg-red-700 text-white border-red-500'
+      };
+      const icons = {
+        success: 'fa-circle-check',
+        info: 'fa-circle-info',
+        warning: 'fa-triangle-exclamation',
+        error: 'fa-circle-xmark'
+      };
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-xs font-bold animate-fade-in ${colors[type] || colors.success}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.success} text-base"></i><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // =========================================================================
+    // MANAJEMEN PERAN PENGGUNA MULTI-LEVEL (ADMIN / OPERATOR / KEPALA BIDANG)
+    // =========================================================================
+    function switchUserRole(role) {
+      currentUserRole = role;
+      const switcher = document.getElementById('header-role-switcher');
+      if (switcher) switcher.value = role;
+
+      // Update role pills di dashboard
+      document.querySelectorAll('.role-pill').forEach(btn => {
+        if (btn.getAttribute('data-role-pill') === role) {
+          btn.className = "role-pill px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white";
+        } else {
+          btn.className = "role-pill px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700";
+        }
+      });
+
+      applyRolePermissions();
+      if (!document.getElementById('section-data').classList.contains('hidden')) {
+        renderFullDataTable();
+      }
+      showToast(`Peran aktif beralih ke: ${role}`, 'info');
+    }
+
+    function applyRolePermissions() {
+      const badge = document.getElementById('role-permission-badge');
+      const quickInputCard = document.getElementById('dashboard-quick-input-card');
+      const navInput = document.getElementById('nav-btn-input');
+      const navPengaturan = document.getElementById('nav-btn-pengaturan');
+      const btnAddNewData = document.getElementById('btn-data-add-new');
+
+      if (currentUserRole === 'Admin') {
+        badge.textContent = "Hak Akses: Full Control (Admin)";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        if (quickInputCard) quickInputCard.classList.remove('hidden');
+        if (navInput) navInput.classList.remove('hidden');
+        if (navPengaturan) navPengaturan.classList.remove('hidden');
+        if (btnAddNewData) btnAddNewData.classList.remove('hidden');
+      } else if (currentUserRole === 'Operator') {
+        badge.textContent = "Hak Akses: Survei Lapangan & Update Progres (Operator)";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300";
+        if (quickInputCard) quickInputCard.classList.remove('hidden');
+        if (navInput) navInput.classList.remove('hidden');
+        if (navPengaturan) navPengaturan.classList.add('hidden');
+        if (btnAddNewData) btnAddNewData.classList.remove('hidden');
+      } else if (currentUserRole === 'Kepala Bidang') {
+        badge.textContent = "Hak Akses: Monitoring Eksekutif & Approval (Kepala Bidang)";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300";
+        if (quickInputCard) quickInputCard.classList.add('hidden');
+        if (navInput) navInput.classList.add('hidden');
+        if (navPengaturan) navPengaturan.classList.add('hidden');
+        if (btnAddNewData) btnAddNewData.classList.add('hidden');
+      }
+    }
+
+    // =========================================================================
+    // NAVIGASI PORTAL PUBLIK & DASHBOARD INTERNAL
+    // =========================================================================
+    function switchPublicTab(tab) {
+      const formTab = document.getElementById('pub-tab-form');
+      const scanTab = document.getElementById('pub-tab-scan');
+      const trackTab = document.getElementById('pub-tab-track');
+      const btnForm = document.getElementById('btn-pub-form');
+      const btnScan = document.getElementById('btn-pub-scan');
+      const btnTrack = document.getElementById('btn-pub-track');
+
+      formTab.classList.add('hidden');
+      if(scanTab) scanTab.classList.add('hidden');
+      trackTab.classList.add('hidden');
+
+      btnForm.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50";
+      if(btnScan) btnScan.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50";
+      btnTrack.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50";
+
+      if (tab === 'form') {
+        formTab.classList.remove('hidden');
+        btnForm.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-[#065f46] text-white shadow-sm";
+      } else if (tab === 'scan') {
+        if(scanTab) scanTab.classList.remove('hidden');
+        if(btnScan) btnScan.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-[#065f46] text-white shadow-sm";
+      } else {
+        trackTab.classList.remove('hidden');
+        btnTrack.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-[#065f46] text-white shadow-sm";
+        searchTicket();
+      }
+    }
+
+    // =========================================================================
+    // BARCODE & QR CODE SCANNER (KAMERA & UPLOAD)
+    // =========================================================================
+    let activeScannerStream = null;
+
+    function startDeviceQRScanner() {
+      const videoEl = document.getElementById('qr-video-preview');
+      const container = document.getElementById('qr-reader-container');
+      container.classList.remove('hidden');
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          .then(stream => {
+            activeScannerStream = stream;
+            videoEl.srcObject = stream;
+            videoEl.play();
+            showToast('Kamera pemindai QR aktif. Arahkan ke barcode tiket.', 'success');
+          })
+          .catch(() => {
+            showToast('Akses kamera tidak diizinkan atau tidak tersedia. Gunakan simulasi scan di bawah.', 'warning');
+          });
+      } else {
+        showToast('Browser tidak mendukung akses kamera langsung.', 'error');
+      }
+    }
+
+    function handleQRImageUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      showToast('Memproses gambar QR Code/Barcode...', 'info');
+      setTimeout(() => {
+        // Simulasi pembacaan QR Code dari file gambar yang diunggah
+        const demoTicket = reports[Math.floor(Math.random() * reports.length)].id;
+        simulateScanResult(demoTicket);
+      }, 1000);
+    }
+
+    function simulateScanResult(ticketId) {
+      if (activeScannerStream) {
+        activeScannerStream.getTracks().forEach(track => track.stop());
+      }
+      document.getElementById('qr-reader-container').classList.add('hidden');
+      showToast(`QR Code berhasil dipindai: ${ticketId}`, 'success');
+      document.getElementById('track-input').value = ticketId;
+      switchPublicTab('track');
+    }
+
+    function openLoginModal() {
+      document.getElementById('login-modal').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function handleInternalLogin(e) {
+      e.preventDefault();
+      const selectedRole = document.getElementById('login-role-select').value;
+      closeModal('login-modal');
+      document.getElementById('public-portal').classList.add('hidden');
+      document.getElementById('internal-dashboard').classList.remove('hidden');
+      switchUserRole(selectedRole);
+      updateAllViews();
+      setTimeout(() => {
+        if (dashboardMap) dashboardMap.invalidateSize();
+      }, 150);
+    }
+
+    function logoutInternal() {
+      switchToPublicPortal();
+      showToast('Anda telah keluar dari sesi Internal PUPR.', 'info');
+    }
+
+    function switchToPublicPortal() {
+      document.getElementById('internal-dashboard').classList.add('hidden');
+      document.getElementById('public-portal').classList.remove('hidden');
+      updatePublicBannerStats();
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('internal-sidebar').classList.toggle('-translate-x-full');
+    }
+
+    function switchAdminSection(sectionName) {
+      const sections = ['dashboard', 'data', 'peta', 'input', 'rekapitulasi', 'pengguna', 'pengaturan'];
+      sections.forEach(sec => {
+        const el = document.getElementById(`section-${sec}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      let targetSec = sectionName;
+      const titles = {
+        'dashboard': ['Dashboard Utama', 'Ringkasan data laporan kerusakan jalan dan jembatan Kabupaten Deiyai'],
+        'input': ['Input Laporan Teknis', 'Formulir pencatatan survei lapangan & unggah dokumentasi kerusakan'],
+        'data': ['Data Laporan Kerusakan', 'Daftar seluruh laporan masyarakat dan survei lapangan Kabupaten Deiyai'],
+        'peta': ['Peta Lokasi (Citra Satelit)', 'Visualisasi geospasial satelit titik kerusakan jalan dan jembatan'],
+        'verifikasi': ['Antrean Verifikasi Teknis', 'Daftar laporan yang menunggu pemeriksaan & persetujuan tim teknis'],
+        'rekapitulasi': ['Rekapitulasi per Distrik & Kampung', 'Statistik kerusakan infrastruktur per wilayah di Kabupaten Deiyai'],
+        'pengguna': ['Pengguna & Peran Multi-Level', 'Pengaturan kewenangan Admin, Operator Lapangan, dan Kepala Bidang'],
+        'pengaturan': ['Pengaturan & Backup Database', 'Jadwal backup mingguan dan koneksi database cloud Supabase']
+      };
+
+      if (sectionName === 'verifikasi') {
+        targetSec = 'data';
+        document.getElementById('data-filter-status').value = 'Menunggu Verifikasi';
+      } else if (sectionName === 'data') {
+        document.getElementById('data-filter-status').value = 'ALL';
+      }
+
+      const targetEl = document.getElementById(`section-${targetSec}`);
+      if (targetEl) targetEl.classList.remove('hidden');
+
+      if (titles[sectionName]) {
+        document.getElementById('admin-page-title').textContent = titles[sectionName][0];
+        document.getElementById('admin-page-subtitle').textContent = titles[sectionName][1];
+      }
+
+      document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+        if (btn.getAttribute('data-nav') === sectionName) {
+          btn.className = "admin-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold bg-white/15 text-white shadow-sm transition";
+        } else {
+          btn.className = "admin-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-emerald-100 hover:bg-white/10 transition";
+        }
+      });
+
+      document.getElementById('internal-sidebar').classList.add('-translate-x-full');
+
+      if (targetSec === 'data') renderFullDataTable();
+      if (targetSec === 'rekapitulasi') renderFullRekapTables();
+      if (targetSec === 'peta') setTimeout(() => initFullMap(), 120);
+      if (targetSec === 'dashboard' && dashboardMap) setTimeout(() => dashboardMap.invalidateSize(), 120);
+    }
+
+    // =========================================================================
+    // UNGGAH FOTO KERUSAKAN (FILE READER + LIVE PREVIEW) & GPS
+    // =========================================================================
+    function handlePhotoUpload(input, previewImgId, wrapperId, bufferKey) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 3 * 1024 * 1024) {
+        showToast('Ukuran foto melebihi batas maksimal 3 MB!', 'error');
+        input.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        photoBuffers[bufferKey] = e.target.result;
+        document.getElementById(previewImgId).src = e.target.result;
+        document.getElementById(wrapperId).classList.remove('hidden');
+        if (bufferKey === 'adm') {
+          document.getElementById('adm-foto-label').textContent = file.name.slice(0, 16) + '...';
+        }
+        showToast('Foto dokumentasi kerusakan berhasil dimuat!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearPhotoUpload(inputId, wrapperId, bufferKey) {
+      document.getElementById(inputId).value = "";
+      document.getElementById(wrapperId).classList.add('hidden');
+      photoBuffers[bufferKey] = "";
+      if (bufferKey === 'adm') {
+        document.getElementById('adm-foto-label').textContent = 'Pilih Foto (JPG/PNG)';
+      }
+    }
+
+    function populateKampungOptions(distrikSelectId, datalistId) {
+      const distrik = document.getElementById(distrikSelectId).value;
+      const datalist = document.getElementById(datalistId);
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      const list = DEIYAI_DISTRIK_KAMPUNG[distrik] || [];
+      list.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function populateKampungFilterDropdown() {
+      const select = document.getElementById('data-filter-kampung');
+      if (!select) return;
+      const kampungs = [...new Set(reports.map(r => r.kampung))].sort();
+      select.innerHTML = `<option value="ALL">Semua Kampung</option>` +
+        kampungs.map(k => `<option value="${k}">${k}</option>`).join('');
+    }
+
+    function getDeviceGPS(latId, lngId, statusId) {
+      const statusEl = document.getElementById(statusId);
+      if (statusEl) statusEl.textContent = "Mendeteksi koordinat satelit GPS...";
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            document.getElementById(latId).value = pos.coords.latitude.toFixed(6);
+            document.getElementById(lngId).value = pos.coords.longitude.toFixed(6);
+            if (statusEl) statusEl.textContent = "Koordinat GPS perangkat berhasil dikunci!";
+            showToast('Koordinat GPS perangkat berhasil diambil.', 'success');
+          },
+          () => {
+            const randomOffset = (Math.random() - 0.5) * 0.02;
+            const lat = (-4.054321 + randomOffset).toFixed(6);
+            const lng = (136.284512 + randomOffset).toFixed(6);
+            document.getElementById(latId).value = lat;
+            document.getElementById(lngId).value = lng;
+            if (statusEl) statusEl.textContent = "Menggunakan titik acuan GPS wilayah Kabupaten Deiyai.";
+            showToast('Koordinat GPS wilayah Deiyai berhasil diisi.', 'info');
+          },
+          { timeout: 5000 }
+        );
+      }
+    }
+
+    function fillAdminGPS() {
+      const randomOffset = (Math.random() - 0.5) * 0.025;
+      const lat = (-4.054321 + randomOffset).toFixed(6);
+      const lng = (136.284512 + randomOffset).toFixed(6);
+      document.getElementById('adm-coords').value = `${lat}, ${lng}`;
+      showToast('Koordinat GPS lapangan diperbarui.', 'success');
+    }
+
+    // =========================================================================
+    // SUBMIT LAPORAN MASYARAKAT & PETUGAS
+    // =========================================================================
+    function generateNextTicketNumber() {
+      const nextNum = 125 + (reports.length - INITIAL_REPORTS.length);
+      return `LP-2026-${String(nextNum).padStart(5, '0')}`;
+    }
+
+    function handlePublicSubmit(e) {
+      e.preventDefault();
+      const ticketNo = generateNextTicketNumber();
+      const latVal = parseFloat(document.getElementById('pub-lat').value) || (-4.054321 + (Math.random() - 0.5) * 0.02);
+      const lngVal = parseFloat(document.getElementById('pub-lng').value) || (136.284512 + (Math.random() - 0.5) * 0.02);
+      const jenis = document.getElementById('pub-jenis').value;
+      const distrik = document.getElementById('pub-distrik').value;
+      const ruas = document.getElementById('pub-ruas').value.trim();
+
+      const newReport = {
+        id: ticketNo,
+        tanggal: new Date().toISOString().split('T')[0],
+        namaPelapor: document.getElementById('pub-nama').value.trim(),
+        nomorHp: document.getElementById('pub-hp').value.trim(),
+        distrik: distrik,
+        kampung: document.getElementById('pub-kampung').value.trim() || "Wako",
+        kategoriObjek: document.getElementById('pub-kategori').value,
+        namaRuas: ruas,
+        jenisKerusakan: jenis,
+        tingkatKerusakan: document.getElementById('pub-tingkat').value,
+        patokanLokasi: document.getElementById('pub-patokan').value.trim() || "-",
+        dampak: document.getElementById('pub-dampak').value,
+        latitude: Number(latVal.toFixed(6)),
+        longitude: Number(lngVal.toFixed(6)),
+        ukuran: "Menunggu pengukuran tim teknis",
+        foto: photoBuffers.pub || generateDamagePhotoSVG(jenis, ruas, distrik),
+        usulan: document.getElementById('pub-usulan').value.trim() || "Survei dan perbaikan konstruksi",
+        keterangan: document.getElementById('pub-keterangan').value.trim() || "Laporan dikirim melalui Portal Masyarakat SIPJ.",
+        status: "Menunggu Verifikasi"
+      };
+
+      reports.unshift(newReport);
+      saveReportsToStorage();
+      selectedReportId = newReport.id;
+      lastCreatedTicketId = newReport.id;
+
+      document.getElementById('public-report-form').reset();
+      clearPhotoUpload('pub-foto', 'pub-foto-wrapper', 'pub');
+
+      populateKampungFilterDropdown();
+      updateAllViews();
+
+      // Modal Sukses dengan QR Code Asli
+      document.getElementById('modal-new-ticket-number').textContent = newReport.id;
+      document.getElementById('modal-new-ticket-summary').textContent = `${newReport.kategoriObjek} • ${newReport.namaRuas} (${newReport.distrik} - Kp. ${newReport.kampung})`;
+      const qrBox = document.getElementById('modal-new-ticket-qr');
+      qrBox.innerHTML = "";
+      new QRCode(qrBox, {
+        text: `SIPJ-PUPR-DEIYAI|${newReport.id}|${newReport.distrik}|${newReport.kampung}`,
+        width: 112,
+        height: 112,
+        colorDark: "#065F46",
+        colorLight: "#FFFFFF"
+      });
+
+      document.getElementById('ticket-success-modal').classList.remove('hidden');
+    }
+
+    function trackNewlyCreatedTicket() {
+      closeModal('ticket-success-modal');
+      document.getElementById('track-input').value = lastCreatedTicketId;
+      switchPublicTab('track');
+    }
+
+    function handleQuickAdminSubmit(e) {
+      e.preventDefault();
+      const ticketNo = generateNextTicketNumber();
+      const coordsStr = document.getElementById('adm-coords').value.split(',');
+      const lat = parseFloat(coordsStr[0]) || -4.054321;
+      const lng = parseFloat(coordsStr[1]) || 136.284512;
+      const jenis = document.getElementById('adm-jenis').value;
+      const distrik = document.getElementById('adm-distrik').value;
+      const ruas = document.getElementById('adm-ruas').value.trim();
+
+      const newReport = {
+        id: ticketNo,
+        tanggal: document.getElementById('adm-tgl').value || new Date().toISOString().split('T')[0],
+        namaPelapor: document.getElementById('adm-pelapor').value.trim(),
+        nomorHp: "081248009900",
+        distrik: distrik,
+        kampung: document.getElementById('adm-kampung').value.trim(),
+        kategoriObjek: "Jalan",
+        namaRuas: ruas,
+        jenisKerusakan: jenis,
+        tingkatKerusakan: document.getElementById('adm-tingkat').value,
+        patokanLokasi: "Survei Internal Lapangan",
+        dampak: "Mengganggu sebagian",
+        latitude: Number(lat.toFixed(6)),
+        longitude: Number(lng.toFixed(6)),
+        ukuran: "P = 10 m | L = 3 m | D = 0,25 m",
+        foto: photoBuffers.adm || generateDamagePhotoSVG(jenis, ruas, distrik),
+        usulan: "Penanganan oleh Seksi Preservasi Jalan & Jembatan",
+        keterangan: "Diinput langsung melalui Dashboard Internal SIPJ.",
+        status: "Menunggu Verifikasi"
+      };
+
+      reports.unshift(newReport);
+      saveReportsToStorage();
+      selectedReportId = newReport.id;
+      document.getElementById('adm-ruas').value = "";
+      clearPhotoUpload('adm-foto', 'adm-foto-preview-box', 'adm');
+
+      populateKampungFilterDropdown();
+      updateAllViews();
+      showToast(`Laporan ${ticketNo} beserta foto berhasil disimpan!`, 'success');
+    }
+
+    function handleFullAdminSubmit(e) {
+      e.preventDefault();
+      const ticketNo = generateNextTicketNumber();
+      const lat = parseFloat(document.getElementById('full-adm-lat').value) || -4.058210;
+      const lng = parseFloat(document.getElementById('full-adm-lng').value) || 136.289410;
+      const jenis = document.getElementById('full-adm-jenis').value;
+      const distrik = document.getElementById('full-adm-distrik').value;
+      const ruas = document.getElementById('full-adm-ruas').value.trim();
+
+      const newReport = {
+        id: ticketNo,
+        tanggal: document.getElementById('full-adm-tgl').value,
+        namaPelapor: document.getElementById('full-adm-pelapor').value.trim(),
+        nomorHp: document.getElementById('full-adm-hp').value.trim(),
+        distrik: distrik,
+        kampung: document.getElementById('full-adm-kampung').value.trim(),
+        kategoriObjek: document.getElementById('full-adm-kategori').value,
+        namaRuas: ruas,
+        jenisKerusakan: jenis,
+        tingkatKerusakan: document.getElementById('full-adm-tingkat').value,
+        patokanLokasi: "Survei Teknis Bina Marga",
+        dampak: "Mengganggu sebagian",
+        latitude: Number(lat.toFixed(6)),
+        longitude: Number(lng.toFixed(6)),
+        ukuran: document.getElementById('full-adm-ukuran').value.trim() || "P = 12 m | L = 3 m | D = 0,25 m",
+        foto: photoBuffers.full || generateDamagePhotoSVG(jenis, ruas, distrik),
+        usulan: document.getElementById('full-adm-catatan').value.trim() || "Rekomendasi teknis lapangan",
+        keterangan: document.getElementById('full-adm-catatan').value.trim() || "Hasil survei lapangan petugas PUPR.",
+        status: document.getElementById('full-adm-status').value
+      };
+
+      reports.unshift(newReport);
+      saveReportsToStorage();
+      selectedReportId = newReport.id;
+      clearPhotoUpload('full-adm-foto', 'full-adm-foto-wrapper', 'full');
+
+      populateKampungFilterDropdown();
+      updateAllViews();
+      switchAdminSection('dashboard');
+      showToast(`Data survei ${ticketNo} berhasil ditambahkan!`, 'success');
+    }
+
+    // =========================================================================
+    // LACAK TIKET (PORTAL MASYARAKAT)
+    // =========================================================================
+    function quickTrack(ticketId) {
+      document.getElementById('track-input').value = ticketId;
+      searchTicket();
+    }
+
+    function searchTicket() {
+      const query = document.getElementById('track-input').value.trim().toLowerCase();
+      const container = document.getElementById('track-result-container');
+      if (!query) {
+        container.innerHTML = `<div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl text-xs font-bold">Silakan masukkan Nomor Tiket terlebih dahulu.</div>`;
+        return;
+      }
+
+      const found = reports.find(r => r.id.toLowerCase() === query || (r.nomorHp && r.nomorHp.toLowerCase().includes(query)));
+      if (!found) {
+        container.innerHTML = `
+          <div class="bg-white border border-red-200 rounded-2xl p-6 text-center space-y-2 shadow-sm">
+            <div class="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto text-xl"><i class="fa-solid fa-file-circle-question"></i></div>
+            <h4 class="text-sm font-bold text-slate-800">Tiket Laporan Tidak Ditemukan</h4>
+            <p class="text-xs text-slate-500">Pastikan Nomor Tiket benar (contoh: <span class="font-mono font-bold">LP-2026-00124</span>).</p>
+          </div>`;
+        return;
+      }
+
+      const step2Done = found.status === 'Dalam Penanganan' || found.status === 'Selesai';
+      const step3Done = found.status === 'Selesai';
+
+      container.innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+          <div class="bg-gradient-to-r from-[#065f46] to-[#047857] text-white p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-emerald-200 font-bold">Status Pengaduan Masyarakat</span>
+              <h4 class="text-xl font-mono font-black mt-0.5">${found.id}</h4>
+              <p class="text-xs text-emerald-100 mt-0.5">${found.namaRuas} • Distrik ${found.distrik}, Kampung ${found.kampung}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              ${getSeverityBadge(found.tingkatKerusakan)}
+              ${getStatusBadge(found.status)}
+            </div>
+          </div>
+
+          <div class="p-5 space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/70">
+                <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs"><i class="fa-solid fa-circle-check"></i><span>1. Laporan Diterima</span></div>
+                <p class="text-[11px] text-slate-600 mt-1">Tercatat pada ${found.tanggal}</p>
+              </div>
+              <div class="p-3 rounded-xl border border-purple-200 bg-purple-50/70">
+                <div class="flex items-center gap-2 text-purple-800 font-bold text-xs"><i class="fa-solid ${step2Done ? 'fa-circle-check' : 'fa-clock'}"></i><span>2. Verifikasi Teknis</span></div>
+                <p class="text-[11px] text-slate-600 mt-1">${step2Done ? 'Telah diverifikasi tim teknis.' : 'Menunggu survei verifikasi.'}</p>
+              </div>
+              <div class="p-3 rounded-xl border ${step2Done ? 'border-sky-200 bg-sky-50/70' : 'border-slate-200 bg-slate-50'}">
+                <div class="flex items-center gap-2 ${step2Done ? 'text-sky-800' : 'text-slate-400'} font-bold text-xs"><i class="fa-solid fa-helmet-safety"></i><span>3. Penanganan Fisik</span></div>
+                <p class="text-[11px] text-slate-600 mt-1">${step2Done ? 'Sedang dikerjakan di lapangan.' : 'Menunggu tahap verifikasi.'}</p>
+              </div>
+              <div class="p-3 rounded-xl border ${step3Done ? 'border-emerald-300 bg-emerald-100' : 'border-slate-200 bg-slate-50'}">
+                <div class="flex items-center gap-2 ${step3Done ? 'text-emerald-900' : 'text-slate-400'} font-bold text-xs"><i class="fa-solid fa-flag-checkered"></i><span>4. Selesai</span></div>
+                <p class="text-[11px] text-slate-600 mt-1">${step3Done ? 'Perbaikan selesai dilaksanakan.' : 'Dalam proses.'}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
+              <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="bg-slate-50 p-3 rounded-xl"><span class="text-slate-500 block">Jenis Kerusakan</span><strong class="text-slate-800">${found.kategoriObjek} — ${found.jenisKerusakan}</strong></div>
+                <div class="bg-slate-50 p-3 rounded-xl"><span class="text-slate-500 block">Koordinat GPS</span><strong class="font-mono text-slate-800">${found.latitude}, ${found.longitude}</strong></div>
+                <div class="sm:col-span-2 bg-slate-50 p-3 rounded-xl"><span class="text-slate-500 block">Keterangan & Usulan Penanganan</span><p class="text-slate-700 mt-0.5">${found.keterangan} (Usulan: ${found.usulan})</p></div>
+              </div>
+              <div>
+                <img src="${found.foto}" alt="Dokumentasi Kerusakan" class="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-sm" />
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // KALKULASI KPI, GRAFIK DONUT, REKAPITULASI & DETAIL LAPORAN
+    // =========================================================================
+    function getAggregatedStats() {
+      const total = HISTORICAL_OFFSET.total + reports.length;
+      const berat = HISTORICAL_OFFSET.berat + reports.filter(r => r.tingkatKerusakan === 'Rusak Berat').length;
+      const sedang = HISTORICAL_OFFSET.sedang + reports.filter(r => r.tingkatKerusakan === 'Rusak Sedang').length;
+      const ringan = HISTORICAL_OFFSET.ringan + reports.filter(r => r.tingkatKerusakan === 'Rusak Ringan').length;
+
+      const verif = HISTORICAL_OFFSET.verif + reports.filter(r => r.status === 'Menunggu Verifikasi').length;
+      const progress = HISTORICAL_OFFSET.progress + reports.filter(r => r.status === 'Dalam Penanganan').length;
+      const done = HISTORICAL_OFFSET.done + reports.filter(r => r.status === 'Selesai').length;
+
+      return { total, berat, sedang, ringan, verif, progress, done };
+    }
+
+    function updatePublicBannerStats() {
+      const s = getAggregatedStats();
+      document.getElementById('pub-stat-total').textContent = s.total;
+      document.getElementById('pub-stat-progress').textContent = s.progress;
+      document.getElementById('pub-stat-done').textContent = s.done;
+    }
+
+    function updateAllViews() {
+      const s = getAggregatedStats();
+      updatePublicBannerStats();
+
+      document.getElementById('kpi-total').textContent = s.total;
+      document.getElementById('kpi-berat').textContent = s.berat;
+      document.getElementById('kpi-berat-pct').textContent = `${((s.berat / s.total) * 100).toFixed(1)}%`;
+
+      document.getElementById('kpi-sedang').textContent = s.sedang;
+      document.getElementById('kpi-sedang-pct').textContent = `${((s.sedang / s.total) * 100).toFixed(1)}%`;
+
+      document.getElementById('kpi-ringan').textContent = s.ringan;
+      document.getElementById('kpi-ringan-pct').textContent = `${((s.ringan / s.total) * 100).toFixed(1)}%`;
+
+      document.getElementById('kpi-verif').textContent = s.verif;
+      document.getElementById('kpi-verif-pct').textContent = `${((s.verif / s.total) * 100).toFixed(1)}%`;
+
+      document.getElementById('kpi-progress').textContent = s.progress;
+      document.getElementById('kpi-progress-pct').textContent = `${((s.progress / s.total) * 100).toFixed(1)}%`;
+
+      document.getElementById('kpi-done').textContent = s.done;
+      document.getElementById('kpi-done-pct').textContent = `${((s.done / s.total) * 100).toFixed(1)}%`;
+
+      document.getElementById('sidebar-badge-total').textContent = s.total;
+      document.getElementById('sidebar-badge-verif').textContent = s.verif;
+
+      renderDonutChart(s);
+      renderRecentReportsTable();
+      renderDashboardRekapTables();
+      selectReportForDetail(selectedReportId);
+      updateMapMarkers();
+    }
+
+    function renderDonutChart(s) {
+      document.getElementById('donut-center-total').textContent = s.total;
+      const labels = ['Rusak Berat', 'Rusak Sedang', 'Rusak Ringan', 'Menunggu Verifikasi', 'Dalam Penanganan', 'Selesai'];
+      const values = [s.berat, s.sedang, s.ringan, s.verif, s.progress, s.done];
+      const colors = ['#DC2626', '#EAB308', '#0284C7', '#7C3AED', '#0D9488', '#059669'];
+
+      document.getElementById('donut-legend').innerHTML = labels.map((lbl, idx) => {
+        const pct = ((values[idx] / s.total) * 100).toFixed(1);
+        return `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${colors[idx]}"></span>
+              <span class="text-slate-600 truncate">${lbl}</span>
+            </div>
+            <span class="font-bold text-slate-800">${values[idx]} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
+          </div>
+        `;
+      }).join('');
+
+      const ctx = document.getElementById('statusDonutChart').getContext('2d');
+      if (statusChartInstance) {
+        statusChartInstance.data.datasets[0].data = values;
+        statusChartInstance.update();
+      } else {
+        statusChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '66%',
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    }
+
+    function getStatusBadge(status) {
+      if (status === 'Menunggu Verifikasi') {
+        return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">Verifikasi</span>`;
+      }
+      if (status === 'Dalam Penanganan') {
+        return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200 whitespace-nowrap">Penanganan</span>`;
+      }
+      return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">Selesai</span>`;
+    }
+
+    function getSeverityBadge(tingkat) {
+      if (tingkat === 'Rusak Berat') {
+        return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-600 text-white whitespace-nowrap">Rusak Berat</span>`;
+      }
+      if (tingkat === 'Rusak Sedang') {
+        return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500 text-white whitespace-nowrap">Rusak Sedang</span>`;
+      }
+      return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-600 text-white whitespace-nowrap">Rusak Ringan</span>`;
+    }
+
+    function renderRecentReportsTable() {
+      const tbody = document.getElementById('dashboard-recent-tbody');
+      const top5 = reports.slice(0, 5);
+      tbody.innerHTML = top5.map((r, i) => `
+        <tr onclick="selectReportForDetail('${r.id}')" class="cursor-pointer hover:bg-emerald-50/70 transition ${r.id === selectedReportId ? 'bg-emerald-50 font-semibold' : ''}">
+          <td class="py-2 pr-1 text-slate-500">${i + 1}</td>
+          <td class="py-2 px-1 whitespace-nowrap">${r.tanggal.split('-').reverse().join('/')}</td>
+          <td class="py-2 px-1 truncate max-w-[95px]" title="${r.distrik} - ${r.kampung}">${r.distrik} - ${r.kampung}</td>
+          <td class="py-2 px-1 truncate max-w-[75px]">${r.jenisKerusakan.split(',')[0]}</td>
+          <td class="py-2 px-1">${getStatusBadge(r.status)}</td>
+          <td class="py-2 pl-1 text-center">
+            <button type="button" onclick="event.stopPropagation(); selectReportForDetail('${r.id}')" class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 hover:bg-emerald-700 hover:text-white inline-flex items-center justify-center transition">
+              <i class="fa-solid fa-eye text-[10px]"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function selectReportForDetail(reportId) {
+      const r = reports.find(item => item.id === reportId) || reports[0];
+      if (!r) return;
+      selectedReportId = r.id;
+
+      document.getElementById('detail-no').textContent = `No. Laporan : ${r.id}`;
+      document.getElementById('detail-lokasi').textContent = `${r.distrik} - Kampung ${r.kampung}`;
+      document.getElementById('detail-koordinat').textContent = `${r.latitude}, ${r.longitude}`;
+      document.getElementById('detail-jenis').textContent = r.jenisKerusakan;
+      document.getElementById('detail-ukuran').textContent = r.ukuran || "P = 10 m | L = 3 m | D = 0,25 m";
+      document.getElementById('detail-status-text').textContent = r.status;
+      document.getElementById('detail-photo').src = r.foto;
+
+      const sevBadge = document.getElementById('detail-badge-severity');
+      sevBadge.textContent = r.tingkatKerusakan;
+      if (r.tingkatKerusakan === 'Rusak Berat') sevBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-600 text-white";
+      else if (r.tingkatKerusakan === 'Rusak Sedang') sevBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500 text-white";
+      else sevBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-600 text-white";
+
+      // Generate QR Code Asli untuk Laporan Terpilih
+      document.getElementById('qr-ticket-label').textContent = r.id;
+      const qrContainer = document.getElementById('dashboard-qrcode');
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, {
+        text: `SIPJ-PUPR-DEIYAI|${r.id}|${r.distrik}|${r.kampung}|${r.latitude},${r.longitude}`,
+        width: 82,
+        height: 82,
+        colorDark: "#064E3B",
+        colorLight: "#FFFFFF"
+      });
+
+      renderRecentReportsTable();
+    }
+
+    // =========================================================================
+    // REKAPITULASI PER DISTRIK & PER KAMPUNG (KLIK UNTUK FILTER)
+    // =========================================================================
+    function getDistrikSummary() {
+      const base = [
+        { distrik: "Tigi", total: 31, berat: 9, sedang: 14, ringan: 8 },
+        { distrik: "Tigi Timur", total: 27, berat: 7, sedang: 10, ringan: 10 },
+        { distrik: "Tigi Barat", total: 23, berat: 6, sedang: 8, ringan: 9 },
+        { distrik: "Bowobado", total: 19, berat: 4, sedang: 8, ringan: 7 },
+        { distrik: "Kapiraya", total: 16, berat: 3, sedang: 5, ringan: 8 }
+      ];
+
+      reports.forEach(r => {
+        let row = base.find(b => b.distrik.toLowerCase() === r.distrik.toLowerCase());
+        if (!row) {
+          row = { distrik: r.distrik, total: 0, berat: 0, sedang: 0, ringan: 0 };
+          base.push(row);
+        }
+        row.total += 1;
+        if (r.tingkatKerusakan === 'Rusak Berat') row.berat += 1;
+        else if (r.tingkatKerusakan === 'Rusak Sedang') row.sedang += 1;
+        else row.ringan += 1;
+      });
+
+      return base.sort((a, b) => b.total - a.total);
+    }
+
+    function getKampungSummary() {
+      const base = [
+        { kampung: "Wako", distrik: "Tigi", total: 17, berat: 5, sedang: 8, ringan: 4 },
+        { kampung: "Idake", distrik: "Tigi Timur", total: 15, berat: 4, sedang: 6, ringan: 5 },
+        { kampung: "Mugi", distrik: "Tigi Barat", total: 11, berat: 2, sedang: 5, ringan: 4 },
+        { kampung: "Wania", distrik: "Bowobado", total: 9, berat: 1, sedang: 4, ringan: 4 },
+        { kampung: "Kogima", distrik: "Kapiraya", total: 7, berat: 2, sedang: 3, ringan: 2 }
+      ];
+
+      reports.forEach(r => {
+        let row = base.find(b => b.kampung.toLowerCase() === r.kampung.toLowerCase());
+        if (!row) {
+          row = { kampung: r.kampung, distrik: r.distrik, total: 0, berat: 0, sedang: 0, ringan: 0 };
+          base.push(row);
+        }
+        row.total += 1;
+        if (r.tingkatKerusakan === 'Rusak Berat') row.berat += 1;
+        else if (r.tingkatKerusakan === 'Rusak Sedang') row.sedang += 1;
+        else row.ringan += 1;
+      });
+
+      return base.sort((a, b) => b.total - a.total);
+    }
+
+    function filterByKampung(kampungName) {
+      switchAdminSection('data');
+      populateKampungFilterDropdown();
+      const select = document.getElementById('data-filter-kampung');
+      if ([...select.options].some(o => o.value === kampungName)) {
+        select.value = kampungName;
+      } else {
+        document.getElementById('data-search-input').value = kampungName;
+      }
+      renderFullDataTable();
+      showToast(`Menampilkan data laporan Kampung ${kampungName}`, 'info');
+    }
+
+    function filterByDistrik(distrikName) {
+      switchAdminSection('data');
+      document.getElementById('data-filter-distrik').value = distrikName;
+      renderFullDataTable();
+      showToast(`Menampilkan data laporan Distrik ${distrikName}`, 'info');
+    }
+
+    function renderDashboardRekapTables() {
+      const distrikData = getDistrikSummary().slice(0, 5);
+      document.getElementById('dashboard-distrik-tbody').innerHTML = distrikData.map((d, idx) => `
+        <tr onclick="filterByDistrik('${d.distrik}')" class="cursor-pointer hover:bg-emerald-50/70 transition">
+          <td class="py-2 pr-1 text-slate-500">${idx + 1}</td>
+          <td class="py-2 px-1 font-bold text-slate-800">${d.distrik}</td>
+          <td class="py-2 px-1 text-center font-extrabold text-slate-900">${d.total}</td>
+          <td class="py-2 px-1 text-center font-bold text-red-600">${d.berat}</td>
+          <td class="py-2 px-1 text-center font-bold text-amber-600">${d.sedang}</td>
+          <td class="py-2 pl-1 text-center font-bold text-emerald-700">${d.ringan}</td>
+        </tr>
+      `).join('');
+
+      const kampungData = getKampungSummary().slice(0, 5);
+      document.getElementById('dashboard-kampung-tbody').innerHTML = kampungData.map((k, idx) => `
+        <tr onclick="filterByKampung('${k.kampung}')" class="cursor-pointer hover:bg-emerald-50/70 transition">
+          <td class="py-1.5 text-slate-500">${idx + 1}</td>
+          <td class="py-1.5 font-bold text-emerald-900 underline decoration-emerald-300">${k.kampung}</td>
+          <td class="py-1.5 text-slate-500">${k.distrik}</td>
+          <td class="py-1.5 text-center font-extrabold text-slate-900">${k.total}</td>
+          <td class="py-1.5 text-center font-bold text-red-600">${k.berat}</td>
+          <td class="py-1.5 text-center font-bold text-amber-600">${k.sedang}</td>
+          <td class="py-1.5 text-center font-bold text-emerald-700">${k.ringan}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderFullRekapTables() {
+      const distrikData = getDistrikSummary();
+      document.getElementById('full-distrik-tbody').innerHTML = distrikData.map((d, idx) => `
+        <tr onclick="filterByDistrik('${d.distrik}')" class="cursor-pointer hover:bg-emerald-50/70">
+          <td class="py-2.5 px-2 text-slate-500">${idx + 1}</td>
+          <td class="py-2.5 px-2 font-bold text-slate-800">${d.distrik}</td>
+          <td class="py-2.5 px-2 text-center font-extrabold">${d.total}</td>
+          <td class="py-2.5 px-2 text-center font-bold text-red-600">${d.berat}</td>
+          <td class="py-2.5 px-2 text-center font-bold text-amber-600">${d.sedang}</td>
+          <td class="py-2.5 px-2 text-center font-bold text-emerald-700">${d.ringan}</td>
+        </tr>
+      `).join('');
+
+      const kampungData = getKampungSummary();
+      document.getElementById('full-kampung-tbody').innerHTML = kampungData.map((k, idx) => `
+        <tr onclick="filterByKampung('${k.kampung}')" class="cursor-pointer hover:bg-emerald-50/70">
+          <td class="py-2.5 px-2 text-slate-500">${idx + 1}</td>
+          <td class="py-2.5 px-2 font-bold text-emerald-900 underline">${k.kampung}</td>
+          <td class="py-2.5 px-2 text-slate-600">${k.distrik}</td>
+          <td class="py-2.5 px-2 text-center font-extrabold">${k.total}</td>
+          <td class="py-2.5 px-2 text-center font-bold text-red-600">${k.berat}</td>
+          <td class="py-2.5 px-2 text-center font-bold text-amber-600">${k.sedang}</td>
+          <td class="py-2.5 px-2 text-center font-bold text-emerald-700">${k.ringan}</td>
+        </tr>
+      `).join('');
+    }
+
+    // =========================================================================
+    // TABEL DATA LENGKAP & AKSI PER PERAN (ADMIN / OPERATOR / KEPALA BIDANG)
+    // =========================================================================
+    function filterDataByStatus(status) {
+      switchAdminSection('data');
+      document.getElementById('data-filter-status').value = status;
+      document.getElementById('data-filter-severity').value = 'ALL';
+      document.getElementById('data-filter-kampung').value = 'ALL';
+      renderFullDataTable();
+    }
+
+    function filterDataBySeverity(severity) {
+      switchAdminSection('data');
+      document.getElementById('data-filter-severity').value = severity;
+      document.getElementById('data-filter-status').value = 'ALL';
+      document.getElementById('data-filter-kampung').value = 'ALL';
+      renderFullDataTable();
+    }
+
+    function renderFullDataTable() {
+      const q = document.getElementById('data-search-input').value.trim().toLowerCase();
+      const distrik = document.getElementById('data-filter-distrik').value;
+      const kampung = document.getElementById('data-filter-kampung').value;
+      const severity = document.getElementById('data-filter-severity').value;
+      const status = document.getElementById('data-filter-status').value;
+
+      const filtered = reports.filter(r => {
+        const matchQ = !q || r.id.toLowerCase().includes(q) || r.namaPelapor.toLowerCase().includes(q) || r.namaRuas.toLowerCase().includes(q) || r.kampung.toLowerCase().includes(q);
+        const matchD = distrik === 'ALL' || r.distrik === distrik;
+        const matchK = kampung === 'ALL' || r.kampung === kampung;
+        const matchSev = severity === 'ALL' || r.tingkatKerusakan === severity;
+        const matchSt = status === 'ALL' || r.status === status;
+        return matchQ && matchD && matchK && matchSev && matchSt;
+      });
+
+      const tbody = document.getElementById('full-data-tbody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500">Tidak ada data laporan yang sesuai dengan filter pencarian.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-3 font-mono font-extrabold text-emerald-800">${r.id}</td>
+          <td class="py-3 px-3 whitespace-nowrap">${r.tanggal}</td>
+          <td class="py-3 px-3">
+            <img src="${r.foto}" alt="Foto" class="w-12 h-9 object-cover rounded-lg border border-slate-200 cursor-pointer" onclick="openDetailModal('${r.id}')" />
+          </td>
+          <td class="py-3 px-3 font-semibold">${r.distrik} - ${r.kampung}</td>
+          <td class="py-3 px-3 max-w-[190px] truncate" title="${r.namaRuas}">${r.namaRuas}</td>
+          <td class="py-3 px-3">${r.jenisKerusakan}</td>
+          <td class="py-3 px-3">${getSeverityBadge(r.tingkatKerusakan)}</td>
+          <td class="py-3 px-3">${getStatusBadge(r.status)}</td>
+          <td class="py-3 px-3 text-center whitespace-nowrap space-x-1">
+            <button onclick="openDetailModal('${r.id}')" title="Detail & Verifikasi" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-700 hover:text-white font-bold transition">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button onclick="openOfficialPrintModal('${r.id}')" title="Cetak PDF Resmi" class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-600 hover:text-white font-bold transition">
+              <i class="fa-solid fa-print"></i>
+            </button>
+            ${currentUserRole === 'Admin' ? `
+              <button onclick="deleteReportById('${r.id}')" title="Hapus Laporan (Admin)" class="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-bold transition">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function deleteReportById(reportId) {
+      if (currentUserRole !== 'Admin') {
+        showToast('Hanya peran Admin yang dapat menghapus laporan!', 'error');
+        return;
+      }
+      reports = reports.filter(r => r.id !== reportId);
+      saveReportsToStorage();
+      updateAllViews();
+      renderFullDataTable();
+      showToast(`Laporan ${reportId} telah dihapus oleh Admin.`, 'warning');
+    }
+
+    function openDetailModal(reportId) {
+      const r = reports.find(item => item.id === reportId);
+      if (!r) return;
+      selectedReportId = r.id;
+
+      const body = document.getElementById('detail-modal-body');
+      body.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <img src="${r.foto}" alt="Foto Kerusakan" class="w-full h-52 object-cover rounded-xl border border-slate-300 shadow-sm" />
+            <div class="mt-3 bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] text-slate-500 uppercase font-bold">Koordinat GPS</p>
+                <p class="font-mono font-bold text-slate-800">${r.latitude}, ${r.longitude}</p>
+              </div>
+              <button onclick="openOfficialPrintModal('${r.id}')" class="px-3 py-1.5 rounded-lg bg-[#065f46] text-white font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-print"></i> Cetak PDF
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-base font-black text-emerald-800">${r.id}</span>
+              ${getSeverityBadge(r.tingkatKerusakan)}
+            </div>
+            <p><span class="text-slate-500">Tanggal Lapor:</span> <strong>${r.tanggal}</strong></p>
+            <p><span class="text-slate-500">Pelapor:</span> <strong>${r.namaPelapor}</strong> (${r.nomorHp || '-'})</p>
+            <p><span class="text-slate-500">Wilayah:</span> <strong>Distrik ${r.distrik}, Kampung ${r.kampung}</strong></p>
+            <p><span class="text-slate-500">Ruas / Objek:</span> <strong>${r.namaRuas}</strong> (${r.kategoriObjek})</p>
+            <p><span class="text-slate-500">Jenis & Ukuran:</span> <strong>${r.jenisKerusakan}</strong> • ${r.ukuran}</p>
+            <p><span class="text-slate-500">Keterangan:</span> ${r.keterangan}</p>
+
+            <!-- Update Status Verifikasi / Penanganan -->
+            <div class="pt-3 border-t border-slate-200 space-y-2">
+              <label class="block font-bold text-slate-800">Update Status Penanganan (${currentUserRole}):</label>
+              <div class="flex gap-2">
+                <select id="modal-status-select" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white font-bold outline-none">
+                  <option value="Menunggu Verifikasi" ${r.status === 'Menunggu Verifikasi' ? 'selected' : ''}>Menunggu Verifikasi</option>
+                  <option value="Dalam Penanganan" ${r.status === 'Dalam Penanganan' ? 'selected' : ''}>Dalam Penanganan</option>
+                  <option value="Selesai" ${r.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                </select>
+                <button onclick="saveReportStatus('${r.id}')" class="px-4 py-2 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white font-bold">
+                  Simpan Status
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function saveReportStatus(reportId) {
+      const newStatus = document.getElementById('modal-status-select').value;
+      const idx = reports.findIndex(r => r.id === reportId);
+      if (idx !== -1) {
+        reports[idx].status = newStatus;
+        saveReportsToStorage();
+        updateAllViews();
+        if (!document.getElementById('section-data').classList.contains('hidden')) {
+          renderFullDataTable();
+        }
+        closeModal('detail-modal');
+        showToast(`Status laporan ${reportId} diperbarui menjadi "${newStatus}" oleh ${currentUserRole}.`, 'success');
+      }
+    }
+
+    // =========================================================================
+    // PETA SATELIT INTERAKTIF (LEAFLET + ESRI WORLD IMAGERY)
+    // =========================================================================
+    function createColoredMarkerIcon(tingkat) {
+      let color = '#059669'; // Hijau (Ringan)
+      if (tingkat === 'Rusak Berat') color = '#DC2626'; // Merah
+      else if (tingkat === 'Rusak Sedang') color = '#EAB308'; // Kuning
+
+      return L.divIcon({
+        className: 'custom-pin',
+        html: `<div style="background:${color}; width:19px; height:19px; border-radius:9999px; border:3px solid #ffffff; box-shadow:0 3px 8px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [19, 19],
+        iconAnchor: [9, 9]
+      });
+    }
+
+    function getTileLayerByMode(mode) {
+      if (mode === 'street') {
+        return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap • Kabupaten Deiyai'
+        });
+      }
+      if (mode === 'topo') {
+        return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenTopoMap • Kabupaten Deiyai'
+        });
+      }
+      // Default: Citra Satelit Esri World Imagery
+      return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Citra Satelit &copy; Esri • Kabupaten Deiyai, Papua Tengah'
+      });
+    }
+
+    function initDashboardMap() {
+      const mapEl = document.getElementById('dashboard-map');
+      if (!mapEl || dashboardMap) return;
+
+      dashboardMap = L.map('dashboard-map', { zoomControl: true }).setView([-4.058, 136.285], 12);
+      dashboardTileLayer = getTileLayerByMode('satellite').addTo(dashboardMap);
+      dashboardMarkersGroup = L.layerGroup().addTo(dashboardMap);
+
+      // Klik pada peta satelit langsung mengisi koordinat GPS di Form Input Petugas
+      dashboardMap.on('click', (e) => {
+        const lat = e.latlng.lat.toFixed(6);
+        const lng = e.latlng.lng.toFixed(6);
+        const coordsInput = document.getElementById('adm-coords');
+        if (coordsInput) coordsInput.value = `${lat}, ${lng}`;
+        showToast(`Koordinat dipilih dari Peta Satelit: ${lat}, ${lng}`, 'info');
+      });
+
+      updateMapMarkers();
+    }
+
+    function changeMapLayer(mode) {
+      if (!dashboardMap) return;
+      if (dashboardTileLayer) dashboardMap.removeLayer(dashboardTileLayer);
+      dashboardTileLayer = getTileLayerByMode(mode).addTo(dashboardMap);
+    }
+
+    function initFullMap() {
+      const mapEl = document.getElementById('full-map');
+      if (!mapEl) return;
+      if (!fullMap) {
+        fullMap = L.map('full-map').setView([-4.058, 136.285], 12);
+        fullTileLayer = getTileLayerByMode('satellite').addTo(fullMap);
+        fullMarkersGroup = L.layerGroup().addTo(fullMap);
+      }
+      fullMap.invalidateSize();
+      updateMapMarkers();
+    }
+
+    function changeFullMapLayer(mode) {
+      if (!fullMap) return;
+      if (fullTileLayer) fullMap.removeLayer(fullTileLayer);
+      fullTileLayer = getTileLayerByMode(mode).addTo(fullMap);
+    }
+
+    function updateMapMarkers() {
+      const bindMarkers = (group, isDashboard) => {
+        if (!group) return;
+        group.clearLayers();
+        reports.forEach(r => {
+          const marker = L.marker([r.latitude, r.longitude], {
+            icon: createColoredMarkerIcon(r.tingkatKerusakan)
+          });
+          const popupHtml = `
+            <div style="min-width:205px; font-family:Inter,sans-serif;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:900; color:#065f46; font-size:12px;">${r.id}</span>
+                <span style="font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#fef2f2; color:#dc2626;">${r.tingkatKerusakan}</span>
+              </div>
+              <div style="font-weight:700; font-size:11px; margin-top:3px; color:#0f172a;">${r.namaRuas}</div>
+              <div style="font-size:10px; color:#475569;">Distrik ${r.distrik} - Kp. ${r.kampung}</div>
+              <div style="font-size:10px; font-family:monospace; color:#64748b; margin-top:2px;">GPS: ${r.latitude}, ${r.longitude}</div>
+              <img src="${r.foto}" style="width:100%; height:85px; object-fit:cover; border-radius:8px; margin-top:6px; border:1px solid #e2e8f0;" />
+              <button onclick="openDetailModal('${r.id}')" style="margin-top:6px; width:100%; padding:5px; background:#065f46; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">Lihat Detail Laporan</button>
+            </div>
+          `;
+          marker.bindPopup(popupHtml);
+          if (isDashboard) {
+            marker.on('click', () => selectReportForDetail(r.id));
+          }
+          marker.addTo(group);
+        });
+      };
+
+      bindMarkers(dashboardMarkersGroup, true);
+      bindMarkers(fullMarkersGroup, false);
+    }
+
+    // =========================================================================
+    // CETAK PDF RESMI BERKOP DINAS PUPR & DOWNLOAD QR CODE
+    // =========================================================================
+    function openOfficialPrintModal(reportId) {
+      const r = reports.find(item => item.id === reportId) || reports[0];
+      if (!r) return;
+
+      const printArea = document.getElementById('print-document-root');
+      printArea.innerHTML = `
+        <!-- KOP SURAT RESMI PEMERINTAH KABUPATEN DEIYAI - DINAS PUPR -->
+        <div class="border-b-4 border-double border-slate-900 pb-4 flex items-center justify-between gap-4">
+          <svg class="w-16 h-16 shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 4L54 12V31C54 45.5 44.5 56.5 32 60C19.5 56.5 10 45.5 10 31V12L32 4Z" fill="#065F46" stroke="#0F172A" stroke-width="2.5"/>
+            <path d="M16 38C22 32 28 32 32 36C36 32 42 32 48 38V43C42 49 36 53 32 55C28 53 22 49 16 43V38Z" fill="#0284C7"/>
+            <path d="M18 33L27 20L34 28L40 21L46 33H18Z" fill="#10B981"/>
+            <circle cx="32" cy="14" r="3.5" fill="#FACC15"/>
+          </svg>
+          <div class="text-center flex-1">
+            <p class="text-xs sm:text-sm font-bold uppercase tracking-wider">PEMERINTAH KABUPATEN DEIYAI</p>
+            <h2 class="text-base sm:text-lg font-black uppercase tracking-tight">DINAS PEKERJAAN UMUM DAN PENATAAN RUANG</h2>
+            <p class="text-xs font-extrabold text-emerald-900">BIDANG BINA MARGA — SEKSI PRESERVASI JALAN DAN JEMBATAN</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">Alamat: Jl. Trans Nabire - Deiyai, Waghete, Kabupaten Deiyai, Provinsi Papua Tengah</p>
+          </div>
+          <div id="print-qr-box" class="shrink-0 p-1 border border-slate-300 rounded"></div>
+        </div>
+
+        <div class="text-center py-1">
+          <h3 class="text-sm sm:text-base font-black underline uppercase">BERITA ACARA / LEMBAR LAPORAN KERUSAKAN JALAN DAN JEMBATAN</h3>
+          <p class="text-xs font-mono font-bold mt-1">Nomor Tiket / Register: ${r.id}</p>
+        </div>
+
+        <table class="w-full text-xs border-collapse border border-slate-500">
+          <tbody>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100 w-1/3">Tanggal Laporan / Temuan</td>
+              <td class="border border-slate-500 p-2">${r.tanggal}</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Identitas Pelapor & Kontak</td>
+              <td class="border border-slate-500 p-2">${r.namaPelapor} (Telp/WA: ${r.nomorHp || '-'})</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Lokasi Administratif</td>
+              <td class="border border-slate-500 p-2">Distrik <strong>${r.distrik}</strong>, Kampung <strong>${r.kampung}</strong>, Kabupaten Deiyai</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Nama Ruas Jalan / Jembatan</td>
+              <td class="border border-slate-500 p-2 font-bold">${r.namaRuas} (Kategori: ${r.kategoriObjek})</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Titik Koordinat GPS</td>
+              <td class="border border-slate-500 p-2 font-mono">Latitude: ${r.latitude} | Longitude: ${r.longitude}</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Jenis & Tingkat Kerusakan</td>
+              <td class="border border-slate-500 p-2"><strong>${r.jenisKerusakan}</strong> — Klasifikasi: <strong>${r.tingkatKerusakan}</strong></td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Dimensi Kerusakan & Dampak</td>
+              <td class="border border-slate-500 p-2">${r.ukuran} (Dampak Lalu Lintas: ${r.dampak})</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Status Penanganan Terkini</td>
+              <td class="border border-slate-500 p-2 font-extrabold uppercase">${r.status}</td>
+            </tr>
+            <tr>
+              <td class="border border-slate-500 p-2 font-bold bg-slate-100">Rekomendasi / Usulan Teknis</td>
+              <td class="border border-slate-500 p-2">${r.usulan}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="grid grid-cols-2 gap-6 pt-2 items-start">
+          <div>
+            <p class="text-xs font-bold mb-1.5">Dokumentasi Visual Lapangan:</p>
+            <img src="${r.foto}" alt="Dokumentasi Lapangan" class="w-full h-44 object-cover rounded border border-slate-500" />
+            <p class="text-[10px] text-slate-500 mt-1 italic">Dicetak melalui SIPJ Dinas PUPR Kabupaten Deiyai oleh ${currentUserRole}</p>
+          </div>
+          <div class="text-xs text-center space-y-14 pt-3">
+            <div>
+              <p>Waghete, ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+              <p class="font-bold">Mengetahui / Menyetujui,</p>
+              <p class="font-bold">Kepala Bidang Bina Marga</p>
+              <p>Dinas PUPR Kabupaten Deiyai</p>
+            </div>
+            <div>
+              <p class="font-bold underline">Ir. Melkianus Mote, ST</p>
+              <p class="text-[11px] text-slate-600">NIP. 19790817 200801 1 014</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      new QRCode(document.getElementById('print-qr-box'), {
+        text: `VERIFIED-SIPJ-PUPR-DEIYAI|${r.id}|${r.distrik}|${r.kampung}`,
+        width: 66,
+        height: 66
+      });
+
+      document.getElementById('print-modal').classList.remove('hidden');
+    }
+
+    function downloadQRCode(containerId, filename) {
+      const canvas = document.querySelector(`#${containerId} canvas`);
+      if (!canvas) {
+        showToast('QR Code belum siap diunduh.', 'warning');
+        return;
+      }
+      const link = document.createElement('a');
+      link.download = `QR-SIPJ-${filename}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast(`QR Code ${filename} berhasil diunduh (PNG).`, 'success');
+    }
+
+    // =========================================================================
+    // BACKUP DATABASE, EXPORT CSV & KONFIGURASI SUPABASE
+    // =========================================================================
+    function refreshDashboardData() {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('fa-spin');
+      setTimeout(() => {
+        icon.classList.remove('fa-spin');
+        updateAllViews();
+        showToast('Seluruh data dashboard & peta satelit disinkronkan!', 'success');
+      }, 400);
+    }
+
+    function triggerDatabaseBackup() {
+      const now = new Date();
+      const timeStr = `Hari ini, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIT`;
+      document.getElementById('last-backup-time').textContent = timeStr;
+
+      const backupPayload = {
+        instansi: "Dinas PUPR Kabupaten Deiyai - Bidang Bina Marga",
+        sistem: "SIPJ (Sistem Informasi Pelaporan Kondisi Kerusakan Jalan dan Jembatan)",
+        waktu_backup: now.toISOString(),
+        dibuat_oleh_peran: currentUserRole,
+        total_record_aktif: reports.length,
+        data_laporan: reports
+      };
+
+      const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_sipj_deiyai_${now.toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showToast('Backup database berhasil dibuat & diunduh (.JSON)!', 'success');
+    }
+
+    function exportCSV() {
+      const headers = ["Nomor Tiket", "Tanggal", "Pelapor", "No HP", "Distrik", "Kampung", "Kategori", "Ruas Jalan/Jembatan", "Jenis Kerusakan", "Tingkat Kerusakan", "Latitude", "Longitude", "Status"];
+      const rows = reports.map(r => [
+        r.id, r.tanggal, `"${r.namaPelapor}"`, r.nomorHp, r.distrik, r.kampung, r.kategoriObjek, `"${r.namaRuas}"`, `"${r.jenisKerusakan}"`, r.tingkatKerusakan, r.latitude, r.longitude, r.status
+      ]);
+
+      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `REKAP-SIPJ-PUPR-DEIYAI-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('Data rekapitulasi berhasil diekspor ke file CSV!', 'success');
+    }
+
+    function saveSupabaseConfig() {
+      const url = document.getElementById('supa-url').value.trim();
+      const key = document.getElementById('supa-key').value.trim();
+      if (!url || !key) {
+        showToast('Isi SUPABASE_URL dan SUPABASE_ANON_KEY terlebih dahulu.', 'warning');
+        return;
+      }
+      localStorage.setItem('sipj_supabase_url', url);
+      localStorage.setItem('sipj_supabase_key', key);
+      showToast('Konfigurasi Supabase berhasil disimpan!', 'success');
+    }
+
+    function resetDemoDatabase() {
+      localStorage.removeItem('sipj_deiyai_reports_v2');
+      loadReportsFromStorage();
+      populateKampungFilterDropdown();
+      updateAllViews();
+      showToast('Database dikembalikan ke data awal Kabupaten Deiyai.', 'info');
+    }
+  </script>
+</body>
+</html>
